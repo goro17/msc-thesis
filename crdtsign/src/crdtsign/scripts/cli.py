@@ -4,7 +4,13 @@ from pathlib import Path
 
 import click
 
-from crdtsign.sign import is_verified_signature, load_keypair, load_public_key, new_keypair, sign
+from crdtsign.sign import (
+    is_verified_signature,
+    load_keypair,
+    load_public_key,
+    new_keypair,
+    sign,
+)
 
 
 @click.command()
@@ -34,13 +40,7 @@ def cli(file: Path, verify: bool):
     will be generated.
     """
     if not verify:
-        # Check whether the file was already signed
-        # If not, sign it and store it in the signed folder
-
-        # If user credentials are not stored, generate a new Ed25519 keypair
-        # Otherwise, use the stored credentials.
-
-        # Check if key files exist
+        # Check if a keypair has been already stored
         if not Path(".storage/id_key").exists():
             if Path(".storage").exists():
                 for file in Path(".storage").iterdir():
@@ -51,6 +51,7 @@ def cli(file: Path, verify: bool):
             click.echo(f"Private key: {private_key.private_bytes_raw().hex()}")
             click.echo(f"Public key: {public_key.public_bytes_raw().hex()}")
         else:
+            # Use the stored keypair instead of generating a new one
             private_key, public_key = load_keypair()
             click.echo("\nKeypair was successfully loaded.")
             click.echo(f"Private key: {private_key.private_bytes_raw().hex()}")
@@ -61,21 +62,17 @@ def cli(file: Path, verify: bool):
         click.echo(click.style("\nFile was successfully signed.", fg="green"))
         click.echo(f"Signature: {signature.hex()}")
     else:
-        # Alternatively, verify the signature of the file
-        # Pass the public key of the signer as an argument
         signature = click.prompt("Signature", type=str)
         public_string = click.prompt("Public key", type=str)
-
-        # Load the public key
         public_key = load_public_key(bytes.fromhex(public_string))
 
-        # Verify the signature
+        # Verify the file's signature using the public key
         if is_verified_signature(file, bytes.fromhex(signature), public_key):
             valid_word = click.style("valid", fg="green", bold=True)
-            click.echo("The provided signature is " + valid_word + ".")
+            click.echo("\nThe provided signature is " + valid_word + ".")
         else:
             invalid_word = click.style("invalid", fg="red", bold=True)
-            click.echo("The provided signature is " + invalid_word + ".")
+            click.echo("\nThe provided signature is " + invalid_word + ".")
 
     return
 

@@ -11,7 +11,18 @@ from cryptography.hazmat.primitives.asymmetric.ed448 import (
 
 
 def sign(file_path: Path, private_key: Ed448PrivateKey) -> bytes:
-    """Sign a file with a private key."""
+    """Sign a file with a private key.
+
+    Args:
+        file_path: Path to the file to be signed
+        private_key: Ed448 private key used for signing
+
+    Returns:
+        bytes: The cryptographic signature of the file
+
+    Note:
+        The function hashes the file content using SHA-256 before signing
+    """
     with open(file_path, "rb") as f:
         file = f.read()
 
@@ -21,7 +32,7 @@ def sign(file_path: Path, private_key: Ed448PrivateKey) -> bytes:
     # Sign the hashed content
     signature = private_key.sign(digest)
 
-    # TODO: Persist the hash+signature pair in the CRDT keystore
+    # TODO: Persist the hash+signature pair in the CRDT storage
 
     return signature
 
@@ -29,7 +40,19 @@ def sign(file_path: Path, private_key: Ed448PrivateKey) -> bytes:
 def is_verified_signature(
     file_path: Path, signature: bytes, public_key: Ed448PublicKey
 ) -> bool:
-    """Verify the signature of a file with the signer's public key."""
+    """Verify the signature of a file with the signer's public key.
+
+    Args:
+        file_path: Path to the file to verify
+        signature: The cryptographic signature to verify
+        public_key: Ed448 public key of the signer
+
+    Returns:
+        bool: True if the signature is valid, False otherwise
+
+    Note:
+        The function hashes the file content using SHA-256 before verification
+    """
     with open(file_path, "rb") as f:
         file = f.read()
 
@@ -45,7 +68,18 @@ def is_verified_signature(
 
 
 def new_keypair(persist: bool = False) -> (Ed448PrivateKey, Ed448PublicKey):
-    """Generate a new keypair."""
+    """Generate a new keypair.
+
+    Args:
+        persist: If True, saves the generated keypair to disk in the .storage directory
+
+    Returns:
+        tuple[Ed448PrivateKey, Ed448PublicKey]: A tuple containing the generated private and public keys
+
+    Note:
+        When persist=True, the private and public keys are saved as hex-encoded strings
+        in .storage/id_key and .storage/id_key.pub respectively
+    """
     # Check if storage directory exists, create if not
     if not Path(".storage").exists():
         Path(".storage").mkdir()
@@ -64,7 +98,15 @@ def new_keypair(persist: bool = False) -> (Ed448PrivateKey, Ed448PublicKey):
 
 
 def load_keypair() -> (Ed448PrivateKey, Ed448PublicKey):
-    """Load the keypair from storage."""
+    """Load the keypair from storage.
+
+    Returns:
+        tuple[Ed448PrivateKey, Ed448PublicKey]: A tuple containing the loaded private and public keys
+
+    Raises:
+        FileNotFoundError: If the key files do not exist in .storage directory
+        ValueError: If the stored key data is invalid or corrupted
+    """
     # Load the keypair from the storage directory
     with open(".storage/id_key", "rb") as file:
         private_bytes = bytes.fromhex(file.read().decode("utf-8"))
@@ -77,6 +119,16 @@ def load_keypair() -> (Ed448PrivateKey, Ed448PublicKey):
 
 
 def load_public_key(public_bytes: bytes) -> Ed448PublicKey:
-    """Return the instance of Ed448OPublicKey corresponding to the public key string."""
+    """Load a public key from its raw bytes representation.
+
+    Args:
+        public_bytes: Raw bytes of the public key
+
+    Returns:
+        Ed448PublicKey: The public key instance
+
+    Raises:
+        ValueError: If the provided bytes are not a valid Ed448 public key
+    """
     public_key = Ed448PublicKey.from_public_bytes(public_bytes)
     return public_key
