@@ -1,5 +1,7 @@
 """Main entry point for the CLI."""
 
+import hashlib
+from datetime import datetime
 from pathlib import Path
 
 import click
@@ -11,6 +13,7 @@ from crdtsign.sign import (
     new_keypair,
     sign,
 )
+from crdtsign.storage import FileSignatureStorage
 
 
 @click.command()
@@ -26,10 +29,11 @@ from crdtsign.sign import (
         path_type=Path,
     ),
     help="Path to the file to sign/verify.",
-    required=True,
+    required=False,
 )
 @click.option("-v", "--verify", is_flag=True, default=False, help="Verify a file.")
-def cli(file: Path, verify: bool):
+@click.option("-t", "--table", is_flag=True, default=False, help="List the signed files present in storage.")
+def cli(file: Path, verify: bool, table: bool):
     """Sign or verify a file using Ed25519 cryptographic signatures.
 
     This application allows users to either 1) sign a file using an Ed25519
@@ -39,6 +43,11 @@ def cli(file: Path, verify: bool):
     If no existing keypair is found when signing ('storage' folder), a new one
     will be generated.
     """
+    if table:
+        sign_storage = FileSignatureStorage(from_file=True)
+        sign_storage.get_signatures_table()
+        return
+    sign_storage = FileSignatureStorage(from_file=True if Path(".storage/signatures.bin").exists() else False)
     if not verify:
         # Check if a keypair has been already stored
         if not Path(".storage/id_key").exists():
@@ -59,8 +68,27 @@ def cli(file: Path, verify: bool):
 
         # Sign the file with the private key
         signature = sign(file, private_key)
+        sig_date = datetime.now()
         click.echo(click.style("\nFile was successfully signed.", fg="green"))
         click.echo(f"Signature: {signature.hex()}")
+
+        with open(file, "rb") as f:
+            file_content = f.read()
+
+        # Hash the file content
+        digest = hashlib.sha256(file_content).digest()
+
+        # Add the signed file metadata to the file signature storage
+        sign_storage.add_file_signature(
+            file_name=file.name,
+            file_hash=digest.hex(),
+            signature=signature.hex(),
+            user_id="nouser",
+            signed_on=datetime.strptime(str(sig_date), "%Y-%m-%d %H:%M:%S.%f"),
+            expiration_date=None,
+            persist=True,
+        )
+
     else:
         signature = click.prompt("Signature", type=str)
         public_string = click.prompt("Public key", type=str)
