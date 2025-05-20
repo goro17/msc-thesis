@@ -2,6 +2,9 @@
 
 import logging
 import os
+import random
+import string
+import time
 from datetime import datetime
 from typing import Optional
 
@@ -17,7 +20,8 @@ class FileSignatureStorage:
         """Initialize a new FileSignatureStorage.
 
         Args:
-            from_file: If True, attempt to load the document state from file.
+            from_file: If True, attempts to load the document state from the default
+                      storage file (.storage/signatures.bin). Defaults to False.
         """
         self.doc = Doc()
 
@@ -27,6 +31,36 @@ class FileSignatureStorage:
         # Load from file if requested
         if from_file:
             self.load_signatures_from_file()
+
+    def _generate_unique_id(self, file_name: str, user_id: str, timestamp: datetime) -> str:
+        """Generate a unique ID for a file signature.
+
+        Creates a deterministic 16-character alphanumeric ID based on the file name,
+        user ID, and timestamp. This ensures that the same file signed by different users
+        or at different times will have different IDs.
+
+        Args:
+            file_name: Name of the file being signed
+            user_id: Identifier of the user who signed the file
+            timestamp: Timestamp when the signature was created
+
+        Returns:
+            str: A 16-character alphanumeric unique ID
+        """
+        # Convert timestamp to Unix timestamp (seconds since epoch)
+        unix_timestamp = int(time.mktime(timestamp.timetuple()))
+
+        # Create a seed based on the combination of inputs
+        seed_str = f"{file_name}_{user_id}_{unix_timestamp}"
+
+        # Use the seed to initialize the random generator for reproducibility
+        random.seed(seed_str)
+
+        # Generate a 16-character alphanumeric ID
+        chars = string.ascii_letters + string.digits
+        unique_id = "".join(random.choice(chars) for _ in range(16))
+
+        return unique_id
 
     def add_file_signature(
         self,
@@ -51,6 +85,7 @@ class FileSignatureStorage:
         """
         file_map = Map(
             {
+                "id": self._generate_unique_id(file_name, user_id, signed_on),
                 "name": file_name,
                 "hash": file_hash,
                 "signature": signature,
@@ -59,18 +94,26 @@ class FileSignatureStorage:
             }
         )
 
+        # Add the file map to the files array first to integrate it with the document
+        self.doc["files"].append(file_map)
+
         # Add expiration date if provided
         if expiration_date:
             file_map["expiration_date"] = str(expiration_date.isoformat())
-
-        # Add the file map to the files array
-        self.doc["files"].append(file_map)
 
         if persist:
             self.save_signatures_to_file()
 
     def save_signatures_to_file(self) -> None:
-        """Save the file signatures to a file in storage."""
+        """Save the file signatures to a persistent storage file.
+
+        Serializes the current state of the CRDT document containing all signatures
+        and writes it to the default storage location (.storage/signatures.bin).
+        Creates the storage directory if it doesn't exist.
+
+        Returns:
+            None
+        """
         # Get the CRDT document state as bytes
         doc_updates = self.doc.get_update()
 
@@ -84,7 +127,15 @@ class FileSignatureStorage:
         print("\nSignatures saved to file.\n")
 
     def load_signatures_from_file(self) -> None:
-        """Load the CRDT corresponding to the signature collection from file and update the current document."""
+        """Load signature data from persistent storage into the current document.
+
+        Attempts to read the serialized CRDT document from the default storage location
+        (.storage/signatures.bin) and applies it to the current document instance.
+        If the storage file doesn't exist, logs an error message but continues execution.
+
+        Returns:
+            None
+        """
         try:
             with open(".storage/signatures.bin", "rb") as f:
                 doc_updates = f.read()
@@ -96,11 +147,17 @@ class FileSignatureStorage:
         self.doc.apply_update(doc_updates)
         print("\nSignatures loaded from file.\n")
 
-    def get_signatures(self):
-        """Get all file signatures stored in the document.
+    def get_signatures(self) -> list:
+        """Retrieve all file signatures stored in the document.
+
+        Converts the CRDT data structures into standard Python dictionaries for easier
+        manipulation and returns them as a list. Each dictionary contains the complete
+        signature information including file name, hash, signature value, user ID,
+        timestamp, and optional expiration date.
 
         Returns:
-            list: A list of all file signatures in the document.
+            list: A list of dictionaries, each containing a complete file signature record.
+                 Returns an empty list if no signatures are stored.
         """
         signatures = []
         files_array = self.doc["files"]
@@ -125,7 +182,6 @@ class FileSignatureStorage:
 
         for i in range(len(files_array)):
             file_map = files_array[i]
-
             if file_map["name"] == file_name:
                 if file_hash is None or file_map["hash"] == file_hash:
                     return dict(file_map)
@@ -156,3 +212,67 @@ class FileSignatureStorage:
             )
 
         Console().print(table)
+
+
+class UserStorage:
+    """Storage for user date using pycrdt's CRDT data structures."""
+
+    def __init__(self, from_file: bool = False):
+        """Initialize a new UserStorage instance.
+
+        Creates a new CRDT document with an empty array for storing user data.
+        If requested, attempts to load existing user data from the default
+        storage location.
+
+        Args:
+            from_file: If True, attempts to load the document state from the default
+                      storage file (.storage/users.bin). Defaults to False.
+        """
+        self.doc = Doc()
+
+        # Create a root map for our document
+        self.doc["files"] = Array([])
+
+        # Load from file if requested
+        # if from_file:
+        #     self.load_signatures_from_file()
+
+    def add_user(
+        self,
+        user_name: str,
+        user_id: str,
+        user_public_key: str,
+        created_on: datetime,
+        persist: Optional[bool] = False,
+    ) -> None:
+        """Add a user to the storage.
+
+        Creates a new user entry with the provided information and adds it to the
+        CRDT document. The user includes its name, unique ID, public key, and
+        timestamp information. Optionally persists the updated state to disk.
+
+        Args:
+            user_name: Name of the user being added
+            user_id: Unique identifier of the user being added
+            user_public_key: Public key of the user being added
+            created_on: Timestamp when the user was created
+            persist: If True, immediately saves the updated state to disk.
+                    Defaults to False.
+
+        Returns:
+            None
+        """
+        user_map = Map(
+            {
+                "name": user_name,
+                "id": user_id,
+                "public_key": user_public_key,
+                "created_on": str(created_on.isoformat()),
+            }
+        )
+
+        # Add the file map to the files array first to integrate it with the document
+        self.doc["users"].append(user_map)
+
+        # if persist:
+        #     self.save_users_to_file()
