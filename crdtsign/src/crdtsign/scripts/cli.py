@@ -6,6 +6,7 @@ from pathlib import Path
 
 import click
 
+from crdtsign.scripts.app import app
 from crdtsign.sign import (
     is_verified_signature,
     load_keypair,
@@ -14,9 +15,19 @@ from crdtsign.sign import (
     sign,
 )
 from crdtsign.storage import FileSignatureStorage
+from crdtsign.user import User
 
 
-@click.command()
+@click.group()
+def cli():
+    """CRDTSign - Secure File Signature Management.
+
+    This tool allows you to sign files, verify signatures, and manage your signature storage.
+    """
+    pass
+
+
+@cli.command("sign")
 @click.option(
     "-f",
     "--file",
@@ -29,18 +40,18 @@ from crdtsign.storage import FileSignatureStorage
         path_type=Path,
     ),
     help="Path to the file to sign/verify.",
-    required=False,
+    required=True,
 )
 @click.option("-v", "--verify", is_flag=True, default=False, help="Verify a file.")
 @click.option("-t", "--table", is_flag=True, default=False, help="List the signed files present in storage.")
-def cli(file: Path, verify: bool, table: bool):
-    """Sign or verify a file using Ed25519 cryptographic signatures.
+def sign_command(file: Path, verify: bool, table: bool):
+    """Sign or verify a file using Ed448 cryptographic signatures.
 
-    This application allows users to either 1) sign a file using an Ed25519
+    This command allows users to either 1) sign a file using an Ed448
     private key (default behavior), or 2) verify a file's signature using the
     signer's public key (via the --verify flag)
 
-    If no existing keypair is found when signing ('storage' folder), a new one
+    If no existing keypair is found when signing ('.storage' folder), a new one
     will be generated.
     """
     if table:
@@ -78,12 +89,15 @@ def cli(file: Path, verify: bool, table: bool):
         # Hash the file content
         digest = hashlib.sha256(file_content).digest()
 
+        user = User()
+
         # Add the signed file metadata to the file signature storage
         sign_storage.add_file_signature(
             file_name=file.name,
             file_hash=digest.hex(),
             signature=signature.hex(),
-            user_id="nouser",
+            user_id=user.user_id,
+            username=user.username,  # Include username in the signature
             signed_on=datetime.strptime(str(sig_date), "%Y-%m-%d %H:%M:%S.%f"),
             expiration_date=None,
             persist=True,
@@ -104,6 +118,9 @@ def cli(file: Path, verify: bool, table: bool):
 
     return
 
+
+# Add the web command to the CLI group
+cli.add_command(app)
 
 if __name__ == "__main__":
     cli()

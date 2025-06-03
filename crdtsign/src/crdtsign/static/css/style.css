@@ -1,0 +1,21 @@
+.tab-content {
+    display: none;
+}
+.tab-content.active {
+    display: block;
+}
+#notification-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 50;
+    max-height: 100vh;
+    overflow-y: auto;
+    pointer-events: none;
+}
+#notification-container > div {
+    pointer-events: auto;
+}

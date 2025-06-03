@@ -67,6 +67,7 @@ class FileSignatureStorage:
         file_name: str,
         file_hash: str,
         signature: str,
+        username: str,
         user_id: str,
         signed_on: datetime,
         expiration_date: Optional[datetime] = None,
@@ -78,11 +79,15 @@ class FileSignatureStorage:
             file_name: Name of the file
             file_hash: Hash of the file
             signature: The file's signature
+            username: Display name of the user who signed the file
             user_id: ID of the user who signed the file
             signed_on: Timestamp of when the signature was created
             expiration_date: Optional expiration date for the signature
             persist: True if the update should trigger a save of the state on file, False otherwise
         """
+        # Use provided username or fall back to user_id if not provided
+        display_name = username if username else user_id
+
         file_map = Map(
             {
                 "id": self._generate_unique_id(file_name, user_id, signed_on),
@@ -90,6 +95,7 @@ class FileSignatureStorage:
                 "hash": file_hash,
                 "signature": signature,
                 "user_id": user_id,
+                "username": display_name,
                 "signed_on": str(signed_on.isoformat()),
             }
         )
@@ -178,10 +184,10 @@ class FileSignatureStorage:
         Returns:
             dict or None: The signature if found, None otherwise
         """
-        files_array = self.doc["files"]
+        files = self.doc["files"]
 
-        for i in range(len(files_array)):
-            file_map = files_array[i]
+        for i in range(len(files)):
+            file_map = files[i]
             if file_map["name"] == file_name:
                 if file_hash is None or file_map["hash"] == file_hash:
                     return dict(file_map)
@@ -231,11 +237,11 @@ class UserStorage:
         self.doc = Doc()
 
         # Create a root map for our document
-        self.doc["files"] = Array([])
+        self.doc["users"] = Array([])
 
         # Load from file if requested
-        # if from_file:
-        #     self.load_signatures_from_file()
+        if from_file:
+            self.load_users_from_file()
 
     def add_user(
         self,
@@ -274,5 +280,87 @@ class UserStorage:
         # Add the file map to the files array first to integrate it with the document
         self.doc["users"].append(user_map)
 
-        # if persist:
-        #     self.save_users_to_file()
+        if persist:
+            self.save_users_to_file()
+
+    def save_users_to_file(self) -> None:
+        """Save the user data to a persistent storage file.
+
+        Serializes the current state of the CRDT document containing all user
+        data and writes it to the default storage location (.storage/users.bin).
+        Creates the storage directory if it doesn't exist.
+
+        Returns:
+            None
+        """
+        # Get the CRDT document state as bytes
+        doc_updates = self.doc.get_update()
+
+        # Ensure storage directory exists
+        os.makedirs(".storage", exist_ok=True)
+
+        # Write the binary state to file
+        with open(".storage/users.bin", "wb") as f:
+            f.write(doc_updates)
+
+        print("\nUsers data saved to file.\n")
+
+    def load_users_from_file(self) -> None:
+        """Load user data from persistent storage into the current document.
+
+        Attempts to read the serialized CRDT document from the default storage location
+        (.storage/users.bin) and applies it to the current document instance.
+        If the storage file doesn't exist, logs an error message but continues execution.
+
+        Returns:
+            None
+        """
+        try:
+            with open(".storage/users.bin", "rb") as f:
+                doc_updates = f.read()
+        except FileNotFoundError:
+            logging.error("\nCould not load state from.storage/users.bin.\n")
+            return
+
+        # Apply the update to the current document
+        self.doc.apply_update(doc_updates)
+        print("\nUsers data loaded from file.\n")
+
+    def get_users(self) -> list:
+        """Retrieve all user data stored in the document.
+
+        Converts the CRDT data structures into standard Python dictionaries for easier
+        manipulation and returns them as a list. Each dictionary contains the complete
+        user information including name, ID, public key, and creation timestamp.
+
+        Returns:
+            list: A list of dictionaries, each containing a complete user record.
+                 Returns an empty list if no users are stored.
+        """
+        users = []
+        users_array = self.doc["users"]
+
+        for i in range(len(users_array)):
+            user_map = users_array[i]
+            users.append(dict(user_map))
+
+        return users
+
+    def find_user(self, user_id: str):
+        """Find a user by ID.
+
+        Args:
+            user_id: ID of the user to find
+
+        Returns:
+            dict or None: The user if found, None otherwise
+        """
+        users = self.doc["users"]
+
+        for i in range(len(users)):
+            user_map = users[i]
+            if user_map["id"] == user_id:
+                return dict(user_map)
+
+        return None
+
