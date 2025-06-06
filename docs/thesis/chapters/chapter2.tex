@@ -1,0 +1,47 @@
+\chapter{Overview on Conflict-free Replicated Data Types}
+
+This chapter serves as a technical background on CRDTs, providing an overview of the concepts
+and terminology used throughout the rest of the thesis.
+
+\section{Fundamentals of CRDTs}
+At their core, CRDTs are abstract data types that are designed to be replicated across multiple nodes,
+and that exhibit the following properties:
+\begin{itemize}
+    \item any replica can be modified without coordinating with any other replicas;
+    \item when any two replicas receive the same set of updates, they reach the same state.
+\end{itemize}
+This is achieved by adopting mathematically sound rules to ensure state convergence \cite{preguiça2018conflict}.
+
+CRDTs ovecome the limitations of syncrhonous concurrency control by adopting a more decentralized approach.
+A node in the network may apply a set of updates to its local state, before transmitting the same set to all
+the other nodes; given that the network may be unreliable, the other nodes may receive the updates out of order,
+which may lead to diverging states. CRDTs ensure that the replicas eventually converge to a consistent state by
+defining robust conflict resolution (or merging) mechanisms, regardless of the order in which the updates are
+received. Depending the particular data structure that is being replicated, properties such as commutativity,
+associativity, and idempotency are enforced to guarantee state convergence.
+
+\subsection{Strong Eventual Consistency}
+CRDTs achieve a model of consistency known as Strong Eventual Consistency \cite{shapiro2011conflict}, in
+which two replicas reach the same final state if they have received the same set of updates.
+
+\paragraph{Eventual Consistency (EC)} An object is said to be \textit{Eventually Consistent} if it satisfies the
+following properties:
+\begin{itemize}
+    \item \textbf{Eventual delivery:} An update delivered to a replica is eventually delivered to all replicas; 
+    \item \textbf{Convergence:} Replicas that have delivered the same updates eventually converge to an equivalent state; 
+    \item \textbf{Termination:} All method executions terminate. 
+\end{itemize}
+
+\paragraph{Strong Eventual Consistency (SEC)} An object is said to be \textit{Strongly Eventually Consistent} if it
+is Eventually Consistent if it satisfies the following additional property:
+\begin{itemize}
+    \item \textbf{Strong Convergence:} Replicas that have delivered the same updates have equivalent state.
+\end{itemize}
+
+\section{Types of CRDTs}
+
+\subsection{State-based CRDTs}
+
+\subsection{Operation-based CRDTs}
+
+\subsection{Delta-state CRDTs}
