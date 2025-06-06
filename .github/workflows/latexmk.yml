@@ -1,4 +1,4 @@
-name: Compile LaTeX
+name: Build PDF
 on:
   push:
     # branches:
@@ -8,24 +8,40 @@ on:
 jobs:
   latekmk:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./docs/thesis/
     container:
       image: registry.gitlab.com/islandoftex/images/texlive:latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Create the output directory
+        run: mkdir out
+      - name: Compile LaTeX (Pass 1/4)
+        run: pdflatex -output-directory=out msc-thesis.tex
+      - name: Compile LaTeX (Pass 1/4)
+        run: pdflatex -output-directory=out msc-thesis.tex
+      - name: Compile bibliography (Pass 2/4)
+        run: biber out/msc-thesis
+      - name: Compile LaTeX (Pass 3/4)
+        run: pdflatex -output-directory=out msc-thesis.tex
+      - name: Compile LaTeX (Pass 4/4)
+        run: pdflatex -output-directory=out msc-thesis.tex
+      - name: Check for successful compilation
+        run: ls -la out/msc-thesis*.pdf
       - name: Get timestamp-based tag
         id: tag
         run: echo "tag=$(date +'v%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
-      - name: Point to the source directory
-        run: cd ./docs/thesis/
-      - name: Check all available files
-        run: ls -la
-      - name: Compile LaTeX
-        run: "pdflatex msc-thesis.tex"
-      - name: Check for successful compilation
-        run: ls -la msc-thesis.pdf
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          files: msc-thesis.pdf
+          name: msc-thesis_${{ steps.tag.outputs.tag }}.pdf
+          path: out/*.pdf
+          retention-days: 3
+      # - name: Create Release
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     tag_name: ${{ steps.tag.outputs.tag }}
+      #     files: msc-thesis.pdf
