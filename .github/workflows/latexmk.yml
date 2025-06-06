@@ -38,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: msc-thesis_${{ steps.tag.outputs.tag }}.pdf
-          path: .docs/thesis/out/msc-thesis.pdf
+          path: docs/thesis/out/msc-thesis.pdf
           retention-days: 3
       # - name: Create Release
       #   uses: softprops/action-gh-release@v2
