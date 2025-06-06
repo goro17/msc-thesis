@@ -2,6 +2,6 @@ name: Test Action
 on: [push]
 jobs:
   action-test:
-    runs-on: ubuntu-test
+    runs-on: ubuntu-latest
     steps:
       - run: echo "Hello World"
