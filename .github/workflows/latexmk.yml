@@ -34,14 +34,17 @@ jobs:
       - name: Get timestamp-based tag
         id: tag
         run: echo "tag=$(date +'v%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+      - name: Append timestamp to artifact name
+        run: mv out/msc-thesis.pdf out/msc-thesis_${{ steps.tag.outputs.tag }}.pdf
       - name: Upload PDF artifact
         uses: actions/upload-artifact@v4
         with:
           name: msc-thesis_${{ steps.tag.outputs.tag }}.pdf
-          path: docs/thesis/out/msc-thesis.pdf
+          path: docs/thesis/out/*.pdf
           retention-days: 3
-      # - name: Create Release
-      #   uses: softprops/action-gh-release@v2
-      #   with:
-      #     tag_name: ${{ steps.tag.outputs.tag }}
-      #     files: msc-thesis.pdf
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: msc-thesis_${{ steps.tag.outputs.tag }}
+          tag_name: ${{ steps.tag.outputs.tag }}
+          files: out/*.pdf
