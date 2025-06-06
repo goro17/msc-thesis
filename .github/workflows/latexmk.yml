@@ -1,27 +1,27 @@
 name: Compile LaTeX
 on:
   push:
-    branches:
-      - '*'
-    paths:
-      - 'docs/thesis/**'
+    # branches:
+    #   - '*'
+    # paths:
+    #   - 'docs/thesis/**'
 jobs:
   latekmk:
     runs-on: ubuntu-latest
     container:
-      image: texlive/texlive:latest
+      image: registry.gitlab.com/islandoftex/images/texlive:latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Get timestamp-based tag
         id: tag
         run: echo "tag=$(date +'v%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+      - name: Debug latexmk
+        run: "which latexmk"
       - name: Point to the source directory
         run: cd ./docs/thesis/
-      - name: Remove previous artifacts
-        run: latekmk -C
       - name: Compile LaTeX
-        run: latekmk
+        run: "latekmk"
       - name: Check for successful compilation
         run: ls -la msc-thesis.pdf
       - name: Create Release
