@@ -18,6 +18,8 @@ jobs:
         run: echo "tag=$(date +'v%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
       - name: Point to the source directory
         run: cd ./docs/thesis/
+      - name: Check all available files
+        run: ls -la
       - name: Compile LaTeX
         run: "pdflatex msc-thesis.tex"
       - name: Check for successful compilation
