@@ -19,7 +19,7 @@ jobs:
       - name: Point to the source directory
         run: cd ./docs/thesis/
       - name: Compile LaTeX
-        run: "/usr/bin/latekmk"
+        run: "pdflatex msc-thesis.tex"
       - name: Check for successful compilation
         run: ls -la msc-thesis.pdf
       - name: Create Release
