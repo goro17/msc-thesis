@@ -16,12 +16,10 @@ jobs:
       - name: Get timestamp-based tag
         id: tag
         run: echo "tag=$(date +'v%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
-      - name: Debug latexmk
-        run: "which latexmk"
       - name: Point to the source directory
         run: cd ./docs/thesis/
       - name: Compile LaTeX
-        run: "latekmk"
+        run: "/usr/bin/latekmk"
       - name: Check for successful compilation
         run: ls -la msc-thesis.pdf
       - name: Create Release
