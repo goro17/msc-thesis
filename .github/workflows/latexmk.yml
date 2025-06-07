@@ -49,6 +49,6 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: msc-thesis_${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
           tag_name: ${{ steps.tag.outputs.tag }}
           files: docs/thesis/out/*.pdf

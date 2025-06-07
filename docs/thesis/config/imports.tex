@@ -5,11 +5,10 @@
 \usepackage{calc}
 \usepackage{fancyhdr}
 \usepackage{fancyhdr}
-\usepackage{helvet}
-\usepackage{concmath}
 \usepackage{blindtext}
 \usepackage{setspace}
 \usepackage{parskip}
+\usepackage{amsmath, amssymb, amsfonts}
 \usepackage{url}
 
 \usepackage{hyperref}
@@ -19,9 +18,11 @@
 }
 
 % Bibliography
-\usepackage[style=numeric-comp,        % Numeric style, compressed
-            sorting=none,              % Order by citation appearance
-            block=space,               % Space between bibliography entries
-            maxbibnames=99]{biblatex}  % Show all author names
+\usepackage[style=numeric-comp,         % Numeric style, compressed
+            sorting=none,               % Order by citation appearance
+            block=space,                % Space between bibliography entries
+            maxbibnames=99,             % Show all author names
+            backend=bibtex,             % Use BibTeX backend
+            ]{biblatex}
 
 \addbibresource{bibliography.bib}

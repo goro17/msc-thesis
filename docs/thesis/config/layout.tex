@@ -1,10 +1,13 @@
 % FONT SETTINGS
-% Main font for document text
+
 \usepackage{concmath}
-\usepackage{helvet}
+
+\usepackage[scaled]{helvet}
+\renewcommand{\sfdefault}{phv}
+
+\usepackage[T1]{fontenc}
 
 % Set fonts
-\renewcommand{\sfdefault}{phv}
 
 % Edit plain page style
 \fancypagestyle{plain}{
@@ -12,6 +15,9 @@
   \fancyfoot[RO]{\thepage}
   \renewcommand{\headrulewidth}{0pt}
 }
+
+% Set page margins
+\setlength{\headheight}{13.59999pt}
 
 
 \usepackage{titletoc}
@@ -21,20 +27,20 @@
 \titleformat{\chapter}[display]
   {\sffamily\Large\raggedleft}
   {\MakeUppercase{\chaptertitlename}%
-  \rlap{ \resizebox{!}{1.5cm}{\thechapter} \rule{5cm}{1.5cm}}}
+  \hspace{0.25em}\rlap{ \resizebox{!}{1.5cm}{\thechapter} \rule{5cm}{1.5cm}}}
   {10pt}{\sffamily\bfseries\Huge}
 \titlespacing*{\chapter}{0pt}{30pt}{20pt}
 \titleformat{\section}
-  {\sffamily\bfseries\Large}
+  {\raggedright\sffamily\bfseries\Large}
   {\thesection}{1em}{}
 \titleformat{\subsection}
-  {\sffamily\bfseries\large}
+  {\raggedright\sffamily\bfseries\large}
   {\thesubsection}{1em}{}
 \titleformat{\subsubsection}
-  {\sffamily\bfseries\normalsize}
+  {\raggedright\sffamily\bfseries\normalsize}
   {\thesubsubsection}{1em}{}
 \titleformat{\paragraph}[runin]
-  {\sffamily\bfseries\normalsize}
+  {\raggedright\sffamily\bfseries\normalsize}
   {\theparagraph}{1em}{}
 
 % TOC/LOF/LOT styles

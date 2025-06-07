@@ -1,47 +1,172 @@
-\chapter{Overview on Conflict-free Replicated Data Types}
+\chapter{
+    Foundational Concepts on Conflict-free Replicated Data Types and Local-first Software
+}
 
-This chapter serves as a technical background on CRDTs, providing an overview of the concepts
-and terminology used throughout the rest of the thesis.
+In this chapter, we will focus on laying the foundations on CRDTs, and explore their
+relevance when applied to local-first software, and in general in decentralized systems. We
+will start by investigating the emergence of CRDTs as a means to achieve data consistency in
+highly available systems; we will then delve into the theoretical foundations of CRDTs. We
+will conclude the chapter by exploring how the capabilities of CRDTs can be leveraged in
+local-first software.
 
-\section{Fundamentals of CRDTs}
-At their core, CRDTs are abstract data types that are designed to be replicated across multiple nodes,
-and that exhibit the following properties:
-\begin{itemize}
-    \item any replica can be modified without coordinating with any other replicas;
-    \item when any two replicas receive the same set of updates, they reach the same state.
-\end{itemize}
-This is achieved by adopting mathematically sound rules to ensure state convergence \cite{preguiça2018conflict}.
+\section{The Challenge of Data Consistency in Distributed Systems}
 
-CRDTs ovecome the limitations of syncrhonous concurrency control by adopting a more decentralized approach.
-A node in the network may apply a set of updates to its local state, before transmitting the same set to all
-the other nodes; given that the network may be unreliable, the other nodes may receive the updates out of order,
-which may lead to diverging states. CRDTs ensure that the replicas eventually converge to a consistent state by
-defining robust conflict resolution (or merging) mechanisms, regardless of the order in which the updates are
-received. Depending the particular data structure that is being replicated, properties such as commutativity,
-associativity, and idempotency are enforced to guarantee state convergence.
+The proliferation of distributed computing paradigms, driven by the need for systems that are
+highly available and performant, has brought the challenge of data consistency to the
+forefront. As applications increasingly span multiple devices and geographical locations,
+ensuring that all users and systems operate on a coherent view ot shared data becomes a
+complex endeavor.
+
+Replication approaches are frequently employed to address this challenge. By providing
+multiple copies of data, called \textit{replicas}, across several nodes, the system can
+ensure that users may access the same piece of information from multiple locations,
+regardless of any potential system failure that may disrupt communication between the nodes
+of the network. Within this effort, however, arises the fundamental problem of making sure
+that the data remains consistent across all replicas, especially in situations where
+multiple users may concurrently update such data. Moreover, achieving a strongly consistent
+system comes at the cost of latency, as it requires replicas to adopt robust coordination
+mechanisms, such as distributed consensus algorithms or two-phase commits, before finalizing
+an update operation. This trade-off has been formalized in literature by the CAP Theorem,
+which identifies the most desirable properties of a distributed system as
+\textit{consistency}, \textit{availability}, and \textit{partition tolerance}, and
+states that a real-world system can only simultaneously provide two out of these three
+properties \cite{gilbert2002brewers}.
+
+In many modern applications, particularly those operating over unreliable networks or
+prioritizing user experience, availability and partition tolerance remain crucial, leading
+to the need for weaker consistency models capable of functioning effectively under these
+constraints. One such model, known as \textit{optimistic replication}, addresses concurrency
+control among replicas by letting the data be accessed "optimistically" (without a priori
+synchronization), propagating the resulting updates in the background, and fixing conflicts
+after they happen \cite{saito2005optimistic}. Another prominent example of weak consistency
+model, named \text{eventual consistency} (EC), allows for replicas to temporarily diverge,
+but guarantees that, when updates to the data are no longer issued, they will converge to
+an identical state \cite{terry1994session}. This model significantly enhances availability
+and responsiveness, as operations can proceed without waiting for acknowledgement from other
+peers. However, if concurrent updates are not reconciled in a principled manner, replicas may
+end up in an inconsistent state, leading to erroneous behavior within the system. An
+alternative approach to conflict resolution has led to the emergence of CRDTs, which provide
+a mathematically sound framework for achieving state convergence without the need for
+synchronization among replicas \cite{preguiça2018conflict}.
+
+\section{Foundational Concepts on Conflict-free Replicated Data Types}
+
+Conflict-free Replicated Data Types (CRDTs) are abstract data types specifically engineered
+for replication across multiple processes in a distributed system. A defining characteristic
+of CRDTs is that any replica can be modified without requiring immediate coordination with
+other replicas \cite{shapiro2011conflict}. This property is fundamental to achieving
+high availability and low latency in distributed applications.
 
 \subsection{Strong Eventual Consistency}
-CRDTs achieve a model of consistency known as Strong Eventual Consistency \cite{shapiro2011conflict}, in
-which two replicas reach the same final state if they have received the same set of updates.
+CRDTs are designed to guarantee a strong form of eventual consistency known as Strong
+Eventual Consistency (SEC)\cite{shapiro2011conflict}, in which two replicas reach the same
+final state if they have received the same set of updates.
 
-\paragraph{Eventual Consistency (EC)} An object is said to be \textit{Eventually Consistent} if it satisfies the
-following properties:
+\paragraph{Eventual Consistency (EC)} An object is said to be \textit{Eventually Consistent}
+if it satisfies the following properties:
 \begin{itemize}
-    \item \textbf{Eventual delivery:} An update delivered to a replica is eventually delivered to all replicas; 
-    \item \textbf{Convergence:} Replicas that have delivered the same updates eventually converge to an equivalent state; 
+    \item \textbf{Eventual delivery:} An update delivered to a replica is eventually delivered
+        to all replicas; 
+    \item \textbf{Convergence:} Replicas that have delivered the same updates eventually
+        converge to an equivalent state; 
     \item \textbf{Termination:} All method executions terminate. 
 \end{itemize}
 
-\paragraph{Strong Eventual Consistency (SEC)} An object is said to be \textit{Strongly Eventually Consistent} if it
-is Eventually Consistent if it satisfies the following additional property:
+\paragraph{Strong Eventual Consistency (SEC)} An object is said to be
+\textit{Strongly Eventually Consistent} if it is Eventually Consistent if it satisfies the
+following additional property:
 \begin{itemize}
-    \item \textbf{Strong Convergence:} Replicas that have delivered the same updates have equivalent state.
+    \item \textbf{Strong Convergence:} Replicas that have delivered the same updates
+        converge to an equivalent state.
 \end{itemize}
 
-\section{Types of CRDTs}
+SEC achieves state convergence without requiring complex, ad-hoc conflict resolution logic
+to be implemented by the developer. Instead, the "conflict-free" nature is embedded within
+the design of the data type itself; concurrent operations are either inherently commutative
+or are resolved by a deterministic merge procedure built into the CRDT.
 
-\subsection{State-based CRDTs}
+\section{State-based vs. Operation-based CRDTs}
 
-\subsection{Operation-based CRDTs}
+The design and implementation of CRDTs primarilys follow two distinct strategies for
+replication: \textit{state-based} and \textit{operation-based}
+\cite{shapiro2011comprehensive}.
+
+\subsection{State-based CRDTs (CvRDTs)}
+
+State-based CRDTs, also known as convergent replicated data types (CvRDTs), operate on the
+principle of replicas exchanging their entire current state. When an update to a replica's
+state is issued, the replica first applies the update locally, and then broadcasts the
+resulting state to the other replicas. The replicas receiving the updated state employ a
+\textit{merge} function to combine the received state with their own local state. for
+convergence to be guaranteed, this merge function must possess three key mathematical
+properties:
+
+\begin{itemize}
+    \item \textbf{Commutativity:} the order in which states are merged does not affect the
+        outcome;\\
+        \begin{equation}
+            \begin{aligned} x \cdot y = y \cdot x \end{aligned} 
+        \end{equation}
+    \item \textbf{Associativity:} the order in which merges are grouped does not affect the
+        outcome;\\
+        \begin{equation}
+            \begin{aligned} (x \cdot y) \cdot z = x \cdot (y \cdot z) \end{aligned}
+        \end{equation}
+    \item \textbf{Idempotency:} merging identical states produces the same resulting state
+        (even when the merge is repeated multiple times).
+        \begin{equation}
+            \begin{aligned} x \cdot x = x \end{aligned}
+        \end{equation}
+\end{itemize}
+
+Thanks to these properties, state-based CRDTs can achieve state convergence among replicas,
+as long as the replicas have received the same set of updates.
+
+\subsection{Operation-based CRDTs (CmRDTs)}
+Operation-based CRDTs, also known as commutative replicated data types (CmRDTs), take a
+different approach. Instead of transmitting the entire updated state, replicas broadcast
+the update \textit{operations} themselves as they occur locally. These operations are then
+applied locally by the receiving replicas. For CmRDTs to ensure convergence, the operations
+must be designed to be commutative when applied concurrently. Furthermore, CmRDTs typically
+impose stricter constraints on the underlying communication infrastructure. Guarantees such
+as exactly-once delivery and causal delivery of operations are often necessary to ensure
+that all operations are applied consistently across replicas.
 
 \subsection{Delta-state CRDTs}
+A significant optimization, particularly for state-based CRDTs, is the concept of
+delta-state CRDTs (\textit{$\delta$-CRDTs}). Instead of transmitting the entire state,
+$\delta$-CRDTs only need to transmit the incremental changes (or \textit{deltas}) that have
+occurred since the last state update. These deltas are then merged at the receiving
+replicas. This approach overcomes the limitations of state-based replication, which can
+often be computationally expensive if the state object to transmit is large in size.
+
+\section{Application of CRDTs in Local-first Software}
+Advancements in modern distributed systems have led to the development of applications that
+function predominantly "on the cloud". These types of applications, such as Google Docs or
+Trello, usually require a strong dependency on a centralized authority (usually assumed by
+one or more remote servers) to handle concurrent data transformations. Users often benefit
+from these applications for their capability to store data --- documents, presentations,
+spreadsheets, etc. --- that can then be accessed from multiple devices, and often sharing
+this same data with other users. As the user's request to access their data on the cloud
+passes through remote servers, one could question the degree of ownership assumed by the
+user over their data, as such ownership is oftentimes "shared" with the cloud provider who
+is hosting the same data\footnote{
+    A well-known colloquial phrase, often cited in popular culture to demistify cloud
+    computing, states that "There is no cloud, it's just someone else's computer."
+    \url{https://www.chriswatterston.com/article/success-of-my-there-is-no-cloud-sticker}
+}. In addition, cloud-centric applications introduce several drawbacks from the user's
+standpoint. For instance, applications may become unusable offline, and performance could be
+dictated by network latency.
+
+A new trend in software development has emerged in recent years and has posed itself in
+direct contrast to the traditional cloud-based architectures. \textit{Local-first software}
+favor a more user-centric approach by prioritizing storing and processing data directly on
+the user's device, with remote servers typically relegated to roles such as syncrhonization
+facilitators or backup providers \cite{kleppmann2019local}. Aside from this approach
+resulting in immediate access to the data and lower latency, local-first applications allow
+users to have complete control over their data, and to not depend on network connectivity to
+operate the application itself.
+
+Due to their decentralized nature, CRDTs are perfectly suitable to enhance the
+functionalities of local-first applications --- especially when it comes to data that is
+shared among multiple users. 

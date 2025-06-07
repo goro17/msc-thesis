@@ -1,3 +1,20 @@
+@article{gilbert2002brewers,
+    author = {Gilbert, Seth and Lynch, Nancy},
+    title = {Brewer's conjecture and the feasibility of consistent, available, partition-tolerant web services},
+    year = {2002},
+    issue_date = {June 2002},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    volume = {33},
+    number = {2},
+    issn = {0163-5700},
+    doi = {10.1145/564585.564601},
+    journal = {SIGACT News},
+    month = jun,
+    pages = {51–59},
+    numpages = {9}
+}
+
 @article{saito2005optimistic,
     author = {Saito, Yasushi and Shapiro, Marc},
     title = {Optimistic replication},
@@ -11,9 +28,21 @@
     doi = {10.1145/1057977.1057980},
     journal = {ACM Comput. Surv.},
     month = mar,
-    pages = {42–81},
+    pages = {42-81},
     numpages = {40},
     keywords = {Replication, disconnected operation, distributed systems, large scale systems, optimistic techniques}
+}
+
+@inproceedings{terry1994session,
+    author={Terry, D.B. and Demers, A.J. and Petersen, K. and Spreitzer, M.J. and Theimer, M.M. and Welch, B.B.},
+    booktitle={Proceedings of 3rd International Conference on Parallel and Distributed Information Systems}, 
+    title={Session guarantees for weakly consistent replicated data}, 
+    year={1994},
+    volume={},
+    number={},
+    pages={140-149},
+    keywords={Application software;Scalability;Mobile computing;Pipelines;Computer science;Laboratories;Databases;Buildings;Computer applications;Mobile communication},
+    doi={10.1109/pdis.1994.331722}
 }
 
 @misc{preguiça2018conflict,
@@ -33,10 +62,44 @@
     address = {Berlin, Heidelberg},
     abstract = {Replicating data under Eventual Consistency (EC) allows any replica to accept updates without remote synchronisation. This ensures performance and scalability in large-scale distributed systems (e.g., clouds). However, published EC approaches are ad-hoc and error-prone. Under a formal Strong Eventual Consistency (SEC) model, we study sufficient conditions for convergence. A data type that satisfies these conditions is called a Conflict-free Replicated Data Type (CRDT). Replicas of any CRDT are guaranteed to converge in a self-stabilising manner, despite any number of failures. This paper formalises two popular approaches (state- and operation-based) and their relevant sufficient conditions. We study a number of useful CRDTs, such as sets with clean semantics, supporting both add and remove operations, and consider in depth the more complex Graph data type. CRDT types can be composed to develop large-scale distributed applications, and have interesting theoretical properties.},
     booktitle = {Proceedings of the 13th International Conference on Stabilization, Safety, and Security of Distributed Systems},
-    pages = {386–400},
+    pages = {386-400},
     numpages = {15},
     keywords = {replicated shared objects, large-scale distributed systems, eventual consistency},
     location = {Grenoble, France},
     series = {SSS'11},
     doi = {10.1007/978-3-642-24550-3_29},
+}
+
+@techreport{shapiro2011comprehensive,
+  title = {{A comprehensive study of Convergent and Commutative Replicated Data Types}},
+  author = {Shapiro, Marc and Pregui{\c c}a, Nuno and Baquero, Carlos and Zawirski, Marek},
+  url = {https://inria.hal.science/inria-00555588},
+  type = {Research Report},
+  number = {RR-7506},
+  pages = {50},
+  institution = {{Inria -- Centre Paris-Rocquencourt ; INRIA}},
+  year = {2011},
+  month = Jan,
+  keywords = {eventual consistency ; optimistic replication ; replicated data types ; distributed algorithms ; distributed systems ; Data replication ; commutative operations},
+  pdf = {https://inria.hal.science/inria-00555588v1/file/techreport.pdf},
+  hal_id = {inria-00555588},
+  hal_version = {v1},
+}
+
+@inproceedings{kleppmann2019local,
+author = {Kleppmann, Martin and Wiggins, Adam and van Hardenberg, Peter and McGranaghan, Mark},
+title = {Local-first software: you own your data, in spite of the cloud},
+year = {2019},
+isbn = {9781450369954},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3359591.3359737},
+doi = {10.1145/3359591.3359737},
+abstract = {Cloud apps like Google Docs and Trello are popular because they enable real-time collaboration with colleagues, and they make it easy for us to access our work from all of our devices. However, by centralizing data storage on servers, cloud apps also take away ownership and agency from users. If a service shuts down, the software stops functioning, and data created with that software is lost. In this article we propose local-first software, a set of principles for software that enables both collaboration and ownership for users. Local-first ideals include the ability to work offline and collaborate across multiple devices, while also improving the security, privacy, long-term preservation, and user control of data. We survey existing approaches to data storage and sharing, ranging from email attachments to web apps to Firebase-backed mobile apps, and we examine the trade-offs of each. We look at Conflict-free Replicated Data Types (CRDTs): data structures that are multi-user from the ground up while also being fundamentally local and private. CRDTs have the potential to be a foundational technology for realizing local-first software. We share some of our findings from developing local-first software prototypes at the Ink \& Switch research lab over the course of several years. These experiments test the viability of CRDTs in practice, and explore the user interface challenges for this new data model. Lastly, we suggest some next steps for moving towards local-first software: for researchers, for app developers, and a startup opportunity for entrepreneurs.},
+booktitle = {Proceedings of the 2019 ACM SIGPLAN International Symposium on New Ideas, New Paradigms, and Reflections on Programming and Software},
+pages = {154–178},
+numpages = {25},
+keywords = {peer-to-peer communication, mobile computing, data ownership, collaboration software, CRDTs},
+location = {Athens, Greece},
+series = {Onward! 2019}
 }
