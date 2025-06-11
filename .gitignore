@@ -173,4 +173,20 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# LaTeX auxiliary artifacts
+*.aux
+*.bbl
+*.bcf
+*.bib
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.toc
+
 .storage

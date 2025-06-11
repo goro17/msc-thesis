@@ -356,7 +356,7 @@ function showSignatureDetails(signature, validationMessage, isValid) {
     const validationContainer = document.getElementById('modal-validation-status-container');
     const validationStatus = document.getElementById('modal-validation-status');
     
-    validationContainer.classList.remove('hidden');
+    // validationContainer.classList.remove('hidden');
     validationStatus.textContent = validationMessage;
     validationStatus.className = 'mt-1 text-sm font-medium';
     

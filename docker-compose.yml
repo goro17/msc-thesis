@@ -1,0 +1,9 @@
+services:
+  crdtsign-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
+    image: crdtsign-app
+    container_name: crdtsign

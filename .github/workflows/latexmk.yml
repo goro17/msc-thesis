@@ -1,10 +1,10 @@
 name: Build PDF
 on:
   push:
-    # branches:
-    #   - '*'
-    # paths:
-    #   - 'docs/thesis/**'
+    branches:
+      - '*'
+    paths:
+      - 'docs/thesis/**'
 jobs:
   latekmk:
     runs-on: ubuntu-latest
