@@ -1,7 +1,7 @@
 # CRDTSign
 
-## Prerequisites
-- Python 3.10+
+### Requirements
+- Python 3.11+
 - [Poetry](https://python-poetry.org/)
 
 ## Usage
