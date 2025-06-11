@@ -1,13 +1,4 @@
-\chapter{
-    Foundational Concepts on Conflict-free Replicated Data Types and Local-first Software
-}
-
-In this chapter, we will focus on laying the foundations on CRDTs, and explore their
-relevance when applied to local-first software, and in general in decentralized systems. We
-will start by investigating the emergence of CRDTs as a means to achieve data consistency in
-highly available systems; we will then delve into the theoretical foundations of CRDTs. We
-will conclude the chapter by exploring how the capabilities of CRDTs can be leveraged in
-local-first software.
+\chapter{Background on Conflict-free Replicated Data Types}
 
 \section{The Challenge of Data Consistency in Distributed Systems}
 
@@ -139,34 +130,3 @@ $\delta$-CRDTs only need to transmit the incremental changes (or \textit{deltas}
 occurred since the last state update. These deltas are then merged at the receiving
 replicas. This approach overcomes the limitations of state-based replication, which can
 often be computationally expensive if the state object to transmit is large in size.
-
-\section{Application of CRDTs in Local-first Software}
-Advancements in modern distributed systems have led to the development of applications that
-function predominantly "on the cloud". These types of applications, such as Google Docs or
-Trello, usually require a strong dependency on a centralized authority (usually assumed by
-one or more remote servers) to handle concurrent data transformations. Users often benefit
-from these applications for their capability to store data --- documents, presentations,
-spreadsheets, etc. --- that can then be accessed from multiple devices, and often sharing
-this same data with other users. As the user's request to access their data on the cloud
-passes through remote servers, one could question the degree of ownership assumed by the
-user over their data, as such ownership is oftentimes "shared" with the cloud provider who
-is hosting the same data\footnote{
-    A well-known colloquial phrase, often cited in popular culture to demistify cloud
-    computing, states that "There is no cloud, it's just someone else's computer."
-    \url{https://www.chriswatterston.com/article/success-of-my-there-is-no-cloud-sticker}
-}. In addition, cloud-centric applications introduce several drawbacks from the user's
-standpoint. For instance, applications may become unusable offline, and performance could be
-dictated by network latency.
-
-A new trend in software development has emerged in recent years and has posed itself in
-direct contrast to the traditional cloud-based architectures. \textit{Local-first software}
-favor a more user-centric approach by prioritizing storing and processing data directly on
-the user's device, with remote servers typically relegated to roles such as syncrhonization
-facilitators or backup providers \cite{kleppmann2019local}. Aside from this approach
-resulting in immediate access to the data and lower latency, local-first applications allow
-users to have complete control over their data, and to not depend on network connectivity to
-operate the application itself.
-
-Due to their decentralized nature, CRDTs are perfectly suitable to enhance the
-functionalities of local-first applications --- especially when it comes to data that is
-shared among multiple users. 

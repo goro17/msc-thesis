@@ -7,6 +7,11 @@
 
 \usepackage[T1]{fontenc}
 
+% Fix font warnings for Concrete font - declare bold substitution
+\DeclareFontShape{T1}{ccr}{b}{n}{<->ssub*ccr/bx/n}{}
+\DeclareFontShape{T1}{ccr}{b}{sl}{<->ssub*ccr/bx/sl}{}
+\DeclareFontShape{T1}{ccr}{b}{it}{<->ssub*ccr/bx/it}{}
+
 % Set fonts
 
 % Edit plain page style
