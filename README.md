@@ -2,7 +2,7 @@
 
 ### Requirements
 - Python 3.11+
-- [Poetry](https://python-poetry.org/)
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ## Usage
 1. Clone the repository.
@@ -13,12 +13,12 @@ git clone https://github.com/goro17/msc-thesis.git
 ```bash
 cd crdtsign
 ```
-3. Install the package and its dependencies and run the server.
+1. Install the package dependencies and run the server.
 ```bash
-poetry install
-poetry run crdtsign-app
+uv sync --locked
+uv run crdtsign-app
 ```
-4. Access the web interface through the browser at the desired host+port (default: [127.0.0.1:5000](http://127.0.0.1:5000/)).
+1. Access the web interface through the browser at the desired host+port (default: [127.0.0.1:5000](http://127.0.0.1:5000/)).
 
 ## Docker
 #### Requirements
