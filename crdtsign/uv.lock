@@ -130,12 +130,12 @@ lint = [
 [package.metadata]
 requires-dist = [
     { name = "anyio", specifier = ">=4.9.0,<5.0.0" },
-    { name = "click", specifier = ">=8.2.0,<9.0.0" },
+    { name = "click", specifier = ">=8.2.1,<9.0.0" },
     { name = "cryptography", specifier = ">=44.0.3,<45.0.0" },
     { name = "flask", specifier = ">=3.1.1,<4.0.0" },
     { name = "httpx-ws", specifier = ">=0.7.2,<0.8.0" },
     { name = "hypercorn", specifier = ">=0.17.3,<0.18.0" },
-    { name = "pycrdt", specifier = ">=0.12.15,<0.13.0" },
+    { name = "pycrdt", specifier = ">=0.12.22,<0.13.0" },
     { name = "pycrdt-websocket", specifier = ">=0.16.0,<0.17.0" },
     { name = "rich", specifier = ">=14.0.0,<15.0.0" },
     { name = "shortuuid", specifier = ">=1.0.13,<2.0.0" },

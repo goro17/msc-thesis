@@ -4,9 +4,13 @@ import hashlib
 from datetime import datetime
 from pathlib import Path
 
+import anyio
 import click
+from hypercorn import Config
+from hypercorn.asyncio import serve
+from pycrdt.websocket import ASGIServer, WebsocketServer
 
-from crdtsign.scripts.app import app
+from crdtsign.api import create_app
 from crdtsign.sign import (
     is_verified_signature,
     load_keypair,
@@ -26,7 +30,7 @@ def cli():
     """
     pass
 
-
+# CLI SIGN / VERIFY COMMANDS
 @cli.command("sign")
 @click.option(
     "-f",
@@ -118,9 +122,67 @@ def sign_command(file: Path, verify: bool, table: bool):
 
     return
 
+# SERVER COMMAND
+async def _run_server(host: str, port: int) -> None:
+    """Run the sync server."""
+    websocket_server = WebsocketServer()
+    app = ASGIServer(websocket_server)
+    config = Config()
+    config.bind = [f"{host}:{port}"]
+    async with websocket_server:
+        await serve(app, config, mode="asgi")
 
-# Add the web command to the CLI group
-cli.add_command(app)
+@cli.command("server")
+@click.option(
+    "-h",
+    "--host",
+    default="0.0.0.0",
+    help="Host to bind the server to.",
+)
+@click.option(
+    "-p",
+    "--port",
+    default=5000,
+    help="Port to bind the server to.",
+)
+def server_command(host: str, port: int) -> None:
+    """Run the sync server."""
+    click.echo("Starting CRDT Sync Server...")
+    anyio.run(_run_server, host, port)
+
+
+# WEB APP COMMAND
+@cli.command("app")
+@click.option(
+    "--host",
+    default="127.0.0.1",
+    help="The host to bind the server to.",
+)
+@click.option(
+    "--port",
+    default=5000,
+    type=int,
+    help="The port to bind the server to.",
+)
+@click.option(
+    "--debug/--no-debug",
+    default=False,
+    help="Run the server in debug mode.",
+)
+def app_command(host, port, debug):
+    """Run the crdtsign web application.
+
+    This command starts a Flask web server that provides a webpage
+    for managing file signatures. It allows users to view, create, verify,
+    and delete file signatures through a browser.
+    """
+    # Ensure storage directory exists
+    Path(".storage").mkdir(exist_ok=True)
+
+    # Create and run the Flask app
+    app = create_app()
+    click.echo(f"\nStarting crdtsign web server at http://{host}:{port}\n")
+    app.run(host=host, port=port, debug=debug)
 
 if __name__ == "__main__":
     cli()
