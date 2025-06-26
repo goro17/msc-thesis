@@ -26,7 +26,7 @@ class FileSignatureStorage:
         self.doc = Doc()
 
         # Create a root map for our document
-        self.doc["files"] = Array([])
+        self.files_map = self.doc.get("files", type=Map)
 
         # Load from file if requested
         if from_file:
@@ -88,8 +88,7 @@ class FileSignatureStorage:
         # Use provided username or fall back to user_id if not provided
         display_name = username if username else user_id
 
-        file_map = Map(
-            {
+        file = {
                 "id": self._generate_unique_id(file_name, user_id, signed_on),
                 "name": file_name,
                 "hash": file_hash,
@@ -97,15 +96,14 @@ class FileSignatureStorage:
                 "user_id": user_id,
                 "username": display_name,
                 "signed_on": str(signed_on.isoformat()),
-            }
-        )
-
-        # Add the file map to the files array first to integrate it with the document
-        self.doc["files"].append(file_map)
+        }
 
         # Add expiration date if provided
         if expiration_date:
-            file_map["expiration_date"] = str(expiration_date.isoformat())
+            file["expiration_date"] = str(expiration_date.isoformat())
+
+        # Add the file map to the files array first to integrate it with the document
+        self.files_map[file["id"]] = file
 
         if persist:
             self.save_signatures_to_file()
@@ -166,11 +164,9 @@ class FileSignatureStorage:
                  Returns an empty list if no signatures are stored.
         """
         signatures = []
-        files_array = self.doc["files"]
 
-        for i in range(len(files_array)):
-            file_map = files_array[i]
-            signatures.append(dict(file_map))
+        for _, file in self.files_map.items():
+            signatures.append(dict(file))
 
         return signatures
 

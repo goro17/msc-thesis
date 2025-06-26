@@ -9,6 +9,7 @@ from pathlib import Path
 from flask import Flask, jsonify, render_template, request
 from werkzeug.utils import secure_filename
 
+from crdtsign.client import FileSignatureStorageClient
 from crdtsign.sign import (
     is_verified_signature,
     load_keypair,
@@ -34,12 +35,18 @@ UPLOAD_FOLDER = Path(tempfile.gettempdir()) / "crdtsign_uploads"
 UPLOAD_FOLDER.mkdir(exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# Initialize storage
-file_storage = FileSignatureStorage(from_file=True if Path(".storage/signatures.bin").exists() else False)
-user_storage = UserStorage(from_file=True if Path(".storage/users.bin").exists() else False)
-
 # Initialize user management
 user = User()
+
+# Initialize storage
+# file_storage = FileSignatureStorage(from_file=True if Path(".storage/signatures.bin").exists() else False)
+file_storage = FileSignatureStorageClient(
+    client_id=user.user_id,
+    host="0.0.0.0",
+    port=8765,
+    from_file=True if Path(".storage/signatures.bin").exists() else False
+)
+user_storage = UserStorage(from_file=True if Path(".storage/users.bin").exists() else False)
 
 
 @app.route("/", methods=["GET", "POST"])

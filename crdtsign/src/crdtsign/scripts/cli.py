@@ -142,7 +142,7 @@ async def _run_server(host: str, port: int) -> None:
 @click.option(
     "-p",
     "--port",
-    default=5000,
+    default=8765,
     help="Port to bind the server to.",
 )
 def server_command(host: str, port: int) -> None:
