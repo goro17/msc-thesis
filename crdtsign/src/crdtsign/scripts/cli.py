@@ -10,7 +10,7 @@ from hypercorn import Config
 from hypercorn.asyncio import serve
 from pycrdt.websocket import ASGIServer, WebsocketServer
 
-from crdtsign.api import create_app
+from crdtsign.api import run_app
 from crdtsign.sign import (
     is_verified_signature,
     load_keypair,
@@ -164,12 +164,7 @@ def server_command(host: str, port: int) -> None:
     type=int,
     help="The port to bind the server to.",
 )
-@click.option(
-    "--debug/--no-debug",
-    default=False,
-    help="Run the server in debug mode.",
-)
-def app_command(host, port, debug):
+def app_command(host, port):
     """Run the crdtsign web application.
 
     This command starts a Flask web server that provides a webpage
@@ -179,10 +174,8 @@ def app_command(host, port, debug):
     # Ensure storage directory exists
     Path(".storage").mkdir(exist_ok=True)
 
-    # Create and run the Flask app
-    app = create_app()
     click.echo(f"\nStarting crdtsign web server at http://{host}:{port}\n")
-    app.run(host=host, port=port, debug=debug)
+    anyio.run(run_app, host, port)
 
 if __name__ == "__main__":
     cli()

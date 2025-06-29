@@ -6,10 +6,11 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from flask import Flask, jsonify, render_template, request
+from hypercorn import Config
+from hypercorn.asyncio import serve
+from quart import Quart, jsonify, render_template, request
 from werkzeug.utils import secure_filename
 
-from crdtsign.client import FileSignatureStorageClient
 from crdtsign.sign import (
     is_verified_signature,
     load_keypair,
@@ -20,8 +21,8 @@ from crdtsign.sign import (
 from crdtsign.storage import FileSignatureStorage, UserStorage
 from crdtsign.user import User
 
-# Initialize Flask app
-app = Flask(
+# Initialize app
+app = Quart(
     __name__,
     static_folder="static",
     template_folder="templates",
@@ -40,7 +41,7 @@ user = User()
 
 # Initialize storage
 # file_storage = FileSignatureStorage(from_file=True if Path(".storage/signatures.bin").exists() else False)
-file_storage = FileSignatureStorageClient(
+file_storage = FileSignatureStorage(
     client_id=user.user_id,
     host="0.0.0.0",
     port=8765,
@@ -50,7 +51,7 @@ user_storage = UserStorage(from_file=True if Path(".storage/users.bin").exists()
 
 
 @app.route("/", methods=["GET", "POST"])
-def index():
+async def index():
     """Render the main page.
 
     On POST, this also handles setting the username for a new user.
@@ -58,8 +59,10 @@ def index():
     global user
 
     # Handle username registration if submitted
-    if request.method == "POST" and "username" in request.form:
-        username = request.form.get("username")
+    if request.method == "POST":
+        form = await request.form
+        if "username" in form:
+            username = form.get("username")
         # Only allow setting username if it's not already set
         if not user.username:
             # Re-initialize user with the provided username
@@ -79,20 +82,20 @@ def index():
     # Check if we need to show the username registration form
     show_username_form = user.username is None
 
-    return render_template(
+    return await render_template(
         "index.html", user_id=user.user_id, username=user.username, show_username_form=show_username_form
     )
 
 
 @app.route("/api/signatures", methods=["GET"])
-def get_signatures():
+async def get_signatures():
     """Get all signatures."""
     signatures = file_storage.get_signatures()
     return jsonify({"signatures": signatures})
 
 
 @app.route("/api/signatures/<file_id>", methods=["GET"])
-def get_signature(file_id):
+async def get_signature(file_id):
     """Get a specific signature by its unique ID."""
     signatures = file_storage.get_signatures()
     for sig in signatures:
@@ -102,18 +105,19 @@ def get_signature(file_id):
 
 
 @app.route("/api/signatures", methods=["POST"])
-def sign_file():
+async def sign_file():
     """Sign a file and store the signature."""
-    if "file" not in request.files:
+    files = await request.files
+    if "file" not in files:
         return jsonify({"error": "No file part"}), 400
 
-    file = request.files["file"]
+    file = files["file"]
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
     # Save the uploaded file
     filename = secure_filename(file.filename)
     file_path = Path(app.config["UPLOAD_FOLDER"]) / filename
-    file.save(file_path)
+    await file.save(file_path)
 
     # Get or generate keypair
     private_key, public_key = load_keypair()
@@ -132,8 +136,9 @@ def sign_file():
     user_id = user.user_id
     username = user.username
     # Handle expiration date if provided
+    form = await request.form
     expiration_date = None
-    expiration_str = request.form.get("expiration_date")
+    expiration_str = form.get("expiration_date")
     if expiration_str:
         try:
             # Parse the datetime-local input format (YYYY-MM-DDThh:mm)
@@ -143,7 +148,7 @@ def sign_file():
             print(f"Error parsing expiration date: {e}")
             pass
 
-    file_storage.add_file_signature(
+    await file_storage.add_file_signature(
         file_name=filename,
         file_hash=digest.hex(),
         signature=signature.hex(),
@@ -168,14 +173,17 @@ def sign_file():
 
 
 @app.route("/api/verify", methods=["POST"])
-def verify_signature():
+async def verify_signature():
     """Verify a file signature."""
-    if "file" not in request.files:
+    files = await request.files
+    form = await request.form
+
+    if "file" not in files:
         return jsonify({"error": "No file part"}), 400
 
-    file = request.files["file"]
-    signature_hex = request.form.get("signature")
-    public_key_hex = request.form.get("public_key")
+    file = files["file"]
+    signature_hex = form.get("signature")
+    public_key_hex = form.get("public_key")
 
     if not signature_hex or not public_key_hex:
         return jsonify({"error": "Signature and public key are required"}), 400
@@ -186,7 +194,7 @@ def verify_signature():
     # Save the uploaded file
     filename = secure_filename(file.filename)
     file_path = Path(app.config["UPLOAD_FOLDER"]) / filename
-    file.save(file_path)
+    await file.save(file_path)
 
     try:
         # Load the public key
@@ -207,7 +215,7 @@ def verify_signature():
 
 
 @app.route("/api/validate/<file_id>", methods=["GET"])
-def validate_signature(file_id):
+async def validate_signature(file_id):
     """Validate a signature by checking both authenticity and expiration status."""
     signatures = file_storage.get_signatures()
     for sig in signatures:
@@ -245,30 +253,29 @@ def validate_signature(file_id):
 
 
 @app.route("/api/signatures/<file_id>", methods=["DELETE"])
-def delete_signature(file_id):
+async def delete_signature(file_id):
     """Delete a signature by its ID."""
     signatures = file_storage.get_signatures()
     for sig in signatures:
         if sig["id"] == file_id:
             # Remove the signature from the array
-            files_array = file_storage.doc["files"]
-            for i in range(len(files_array)):
-                if files_array[i]["id"] == file_id:
-                    del files_array[i]
-                    file_storage.save_signatures_to_file()
-                    return jsonify({"message": "Signature deleted successfully"})
+            await file_storage.remove_file_signature(file_id)
+            return jsonify({"message": "Signature deleted successfully"})
 
     return jsonify({"error": "Signature not found"}), 404
 
 
 @app.route("/api/user", methods=["GET"])
-def get_user():
+async def get_user():
     """Get the current user information."""
     return jsonify(
         {"user_id": user.user_id, "username": user.username, "registration_date": user.registration_date.isoformat()}
     )
 
+async def run_app(host: str, port: int):
+    """Connect the storage to the server and run the Quart application."""
+    await file_storage.connect()
 
-def create_app():
-    """Create and configure the Flask app."""
-    return app
+    config = Config()
+    config.bind = [f"{host}:{port}"]
+    await serve(app, config)

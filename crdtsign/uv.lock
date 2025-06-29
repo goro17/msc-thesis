@@ -3,6 +3,15 @@ revision = 2
 requires-python = ">=3.11, <4.0"
 
 [[package]]
+name = "aiofiles"
+version = "24.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0b/03/a88171e277e8caa88a4c77808c20ebb04ba74cc4681bf1e9416c862de237/aiofiles-24.1.0.tar.gz", hash = "sha256:22a075c9e5a3810f0c2e48f3008c94d68c65d763b9b03857924c99e57355166c", size = 30247, upload-time = "2024-06-24T11:02:03.584Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a5/45/30bb92d442636f570cb5651bc661f52b610e2eec3f891a5dc3a4c3667db0/aiofiles-24.1.0-py3-none-any.whl", hash = "sha256:b4ec55f4195e3eb5d7abd1bf7e061763e864dd4954231fb8539a0ef8bb8260e5", size = 15896, upload-time = "2024-06-24T11:02:01.529Z" },
+]
+
+[[package]]
 name = "anyio"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -102,21 +111,20 @@ wheels = [
 
 [[package]]
 name = "crdtsign"
-version = "0.2.1"
+version = "0.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "anyio" },
     { name = "click" },
     { name = "cryptography" },
-    { name = "flask" },
     { name = "httpx-ws" },
     { name = "hypercorn" },
     { name = "pycrdt" },
     { name = "pycrdt-websocket" },
+    { name = "quart" },
     { name = "rich" },
     { name = "shortuuid" },
     { name = "websockets" },
-    { name = "werkzeug" },
 ]
 
 [package.dev-dependencies]
@@ -132,15 +140,14 @@ requires-dist = [
     { name = "anyio", specifier = ">=4.9.0,<5.0.0" },
     { name = "click", specifier = ">=8.2.1,<9.0.0" },
     { name = "cryptography", specifier = ">=44.0.3,<45.0.0" },
-    { name = "flask", specifier = ">=3.1.1,<4.0.0" },
     { name = "httpx-ws", specifier = ">=0.7.2,<0.8.0" },
     { name = "hypercorn", specifier = ">=0.17.3,<0.18.0" },
     { name = "pycrdt", specifier = ">=0.12.22,<0.13.0" },
     { name = "pycrdt-websocket", specifier = ">=0.16.0,<0.17.0" },
+    { name = "quart", specifier = ">=0.20.0" },
     { name = "rich", specifier = ">=14.0.0,<15.0.0" },
     { name = "shortuuid", specifier = ">=1.0.13,<2.0.0" },
     { name = "websockets", specifier = ">=15.0.1,<16.0.0" },
-    { name = "werkzeug", specifier = ">=3.1.3,<4.0.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -535,6 +542,26 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ae/3c/c9d525a414d506893f0cd8a8d0de7706446213181570cdbd766691164e40/pytest-8.3.5.tar.gz", hash = "sha256:f4efe70cc14e511565ac476b57c279e12a855b11f48f212af1080ef2263d3845", size = 1450891, upload-time = "2025-03-02T12:54:54.503Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/30/3d/64ad57c803f1fa1e963a7946b6e0fea4a70df53c1a7fed304586539c2bac/pytest-8.3.5-py3-none-any.whl", hash = "sha256:c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820", size = 343634, upload-time = "2025-03-02T12:54:52.069Z" },
+]
+
+[[package]]
+name = "quart"
+version = "0.20.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiofiles" },
+    { name = "blinker" },
+    { name = "click" },
+    { name = "flask" },
+    { name = "hypercorn" },
+    { name = "itsdangerous" },
+    { name = "jinja2" },
+    { name = "markupsafe" },
+    { name = "werkzeug" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1d/9d/12e1143a5bd2ccc05c293a6f5ae1df8fd94a8fc1440ecc6c344b2b30ce13/quart-0.20.0.tar.gz", hash = "sha256:08793c206ff832483586f5ae47018c7e40bdd75d886fee3fabbdaa70c2cf505d", size = 63874, upload-time = "2024-12-23T13:53:05.664Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7e/e9/cc28f21f52913adf333f653b9e0a3bf9cb223f5083a26422968ba73edd8d/quart-0.20.0-py3-none-any.whl", hash = "sha256:003c08f551746710acb757de49d9b768986fd431517d0eb127380b656b98b8f1", size = 77960, upload-time = "2024-12-23T13:53:02.842Z" },
 ]
 
 [[package]]

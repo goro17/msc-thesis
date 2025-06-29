@@ -2,67 +2,117 @@
 
 import logging
 import os
-import random
-import string
-import time
 from datetime import datetime
 from typing import Optional
 
-from pycrdt import Array, Doc, Map
+import shortuuid
+from httpx_ws import aconnect_ws
+from pycrdt import Array, Doc, Map, Provider
+from pycrdt.websocket.websocket import HttpxWebsocket
 from rich.console import Console
 from rich.table import Table
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class FileSignatureStorage:
     """Storage for file signatures using pycrdt's CRDT data structures."""
 
-    def __init__(self, from_file: bool = False):
+    def __init__(
+        self,
+        client_id: str,
+        host: str,
+        port: int,
+        room_name: str = "file-signatures",
+        from_file: bool = False,
+    ):
         """Initialize a new FileSignatureStorage.
 
         Args:
+            client_id: Unique identifier for this client
+            host: Hostname or IP address of the server
+            port: Port number of the server
+            room_name: Name of the room in the server for this client
             from_file: If True, attempts to load the document state from the default
                       storage file (.storage/signatures.bin). Defaults to False.
         """
+        self.client_id = client_id
+        self.host = "server" if os.environ.get("IS_CONTAINER") == "true" else host
+        self.port = port
+        self.room_name = room_name
         self.doc = Doc()
-
-        # Create a root map for our document
         self.files_map = self.doc.get("files", type=Map)
+        self._connected = False
+        self._ws_provider = None
+        self._provider_task = None
 
-        # Load from file if requested
+        # Load state from file if requested
         if from_file:
             self.load_signatures_from_file()
 
-    def _generate_unique_id(self, file_name: str, user_id: str, timestamp: datetime) -> str:
-        """Generate a unique ID for a file signature.
+    async def _create_ws_provider(
+        self,
+        host,
+        port,
+        room_name,
+        doc=None,
+        log=None,
+    ):
+        """Create a websocket provider for connecting to the server."""
+        doc = Doc() if doc is None else doc
+        async with (
+            aconnect_ws(f"http://{host}:{port}/{room_name}") as websocket,
+            Provider(doc, HttpxWebsocket(websocket, room_name), log=log)
+        ):
+            yield doc
 
-        Creates a deterministic 16-character alphanumeric ID based on the file name,
-        user ID, and timestamp. This ensures that the same file signed by different users
-        or at different times will have different IDs.
+    async def connect(self):
+        """Connect to sync server and start persistent synchronization."""
+        logger.info(f"Client {self.client_id} connecting to http://{self.host}:{self.port}/{self.room_name}/...")
 
-        Args:
-            file_name: Name of the file being signed
-            user_id: Identifier of the user who signed the file
-            timestamp: Timestamp when the signature was created
+        # Create the websocket provider generator
+        self._ws_provider = self._create_ws_provider(
+            self.host,
+            self.port,
+            self.room_name,
+            self.doc,
+        )
 
-        Returns:
-            str: A 16-character alphanumeric unique ID
-        """
-        # Convert timestamp to Unix timestamp (seconds since epoch)
-        unix_timestamp = int(time.mktime(timestamp.timetuple()))
+        # Get the provider data from the async generator
+        try:
+            doc = await anext(self._ws_provider)
 
-        # Create a seed based on the combination of inputs
-        seed_str = f"{file_name}_{user_id}_{unix_timestamp}"
+            # Update our document reference to the connected one
+            self.doc = doc
+            self.files_map = doc.get("files", type=Map)
+            self.files_map.observe(self._on_map_change)
+            self._connected = True
 
-        # Use the seed to initialize the random generator for reproducibility
-        random.seed(seed_str)
+            logger.info(f"Client {self.client_id} successfully connected.")
+        except Exception as e:
+            logger.error(f"Failed to connect client {self.client_id}: {e}")
+            self._connected = False
+            if self._ws_provider:
+                await self._ws_provider.aclose()
+                self._ws_provider = None
 
-        # Generate a 16-character alphanumeric ID
-        chars = string.ascii_letters + string.digits
-        unique_id = "".join(random.choice(chars) for _ in range(16))
+    async def disconnect(self):
+        """Disconnect from the sync server and cleanup resources."""
+        if self._ws_provider:
+            try:
+                await self._ws_provider.aclose()
+            except Exception as e:
+                logger.error(f"Error during disconnect for client {self.client_id}: {e}")
+            finally:
+                self._ws_provider = None
+                self._connected = False
+                logger.info(f"Client {self.client_id} disconnected.")
 
-        return unique_id
+    def _on_map_change(self, event):
+        """Handle changes to the shared map."""
+        logger.info(f"Client {self.client_id} detected change: {event}")
 
-    def add_file_signature(
+    async def add_file_signature(
         self,
         file_name: str,
         file_hash: str,
@@ -89,7 +139,7 @@ class FileSignatureStorage:
         display_name = username if username else user_id
 
         file = {
-                "id": self._generate_unique_id(file_name, user_id, signed_on),
+                "id": shortuuid.uuid(),
                 "name": file_name,
                 "hash": file_hash,
                 "signature": signature,
@@ -102,11 +152,43 @@ class FileSignatureStorage:
         if expiration_date:
             file["expiration_date"] = str(expiration_date.isoformat())
 
-        # Add the file map to the files array first to integrate it with the document
-        self.files_map[file["id"]] = file
+        # Add the file to the files map
+        with self.doc.transaction():
+            self.files_map[file["id"]] = file
 
         if persist:
             self.save_signatures_to_file()
+
+    async def remove_file_signature(self, file_id: str, persist: Optional[bool] = False) -> None:
+        """Remove a file signature from the storage.
+
+        Args:
+            file_id: ID of the file signature to remove
+            persist: True if the removal should trigger a save of the state on file,
+                    False otherwise
+        """
+        file = self.files_map[file_id]
+        if file:
+            with self.doc.transaction():
+                del self.files_map[file_id]
+
+        if persist:
+            self.save_signatures_to_file()
+
+    def get_signatures(self) -> list:
+        """Retrieve all file signatures stored in the document.
+
+        Converts the CRDT data structures into standard Python dictionaries for easier
+        manipulation and returns them as a list. Each dictionary contains the complete
+        signature information including file name, hash, signature value, user ID,
+        timestamp, and optional expiration date.
+        """
+        signatures = []
+
+        for _, file in self.files_map.items():
+            signatures.append(dict(file))
+
+        return signatures
 
     def save_signatures_to_file(self) -> None:
         """Save the file signatures to a persistent storage file.
@@ -114,9 +196,6 @@ class FileSignatureStorage:
         Serializes the current state of the CRDT document containing all signatures
         and writes it to the default storage location (.storage/signatures.bin).
         Creates the storage directory if it doesn't exist.
-
-        Returns:
-            None
         """
         # Get the CRDT document state as bytes
         doc_updates = self.doc.get_update()
@@ -137,8 +216,6 @@ class FileSignatureStorage:
         (.storage/signatures.bin) and applies it to the current document instance.
         If the storage file doesn't exist, logs an error message but continues execution.
 
-        Returns:
-            None
         """
         try:
             with open(".storage/signatures.bin", "rb") as f:
@@ -150,45 +227,6 @@ class FileSignatureStorage:
         # Apply the update to the current document
         self.doc.apply_update(doc_updates)
         print("\nSignatures loaded from file.\n")
-
-    def get_signatures(self) -> list:
-        """Retrieve all file signatures stored in the document.
-
-        Converts the CRDT data structures into standard Python dictionaries for easier
-        manipulation and returns them as a list. Each dictionary contains the complete
-        signature information including file name, hash, signature value, user ID,
-        timestamp, and optional expiration date.
-
-        Returns:
-            list: A list of dictionaries, each containing a complete file signature record.
-                 Returns an empty list if no signatures are stored.
-        """
-        signatures = []
-
-        for _, file in self.files_map.items():
-            signatures.append(dict(file))
-
-        return signatures
-
-    def find_signature(self, file_name: str, file_hash: Optional[str] = None):
-        """Find a signature by file name and optionally by hash.
-
-        Args:
-            file_name: Name of the file to find
-            file_hash: Optional hash of the file to find
-
-        Returns:
-            dict or None: The signature if found, None otherwise
-        """
-        files = self.doc["files"]
-
-        for i in range(len(files)):
-            file_map = files[i]
-            if file_map["name"] == file_name:
-                if file_hash is None or file_map["hash"] == file_hash:
-                    return dict(file_map)
-
-        return None
 
     def get_signatures_table(self) -> None:
         """Get all file signatures stored in the document as a formatted table."""
@@ -261,8 +299,6 @@ class UserStorage:
             persist: If True, immediately saves the updated state to disk.
                     Defaults to False.
 
-        Returns:
-            None
         """
         user_map = Map(
             {
@@ -286,8 +322,6 @@ class UserStorage:
         data and writes it to the default storage location (.storage/users.bin).
         Creates the storage directory if it doesn't exist.
 
-        Returns:
-            None
         """
         # Get the CRDT document state as bytes
         doc_updates = self.doc.get_update()
@@ -308,8 +342,6 @@ class UserStorage:
         (.storage/users.bin) and applies it to the current document instance.
         If the storage file doesn't exist, logs an error message but continues execution.
 
-        Returns:
-            None
         """
         try:
             with open(".storage/users.bin", "rb") as f:
@@ -329,9 +361,6 @@ class UserStorage:
         manipulation and returns them as a list. Each dictionary contains the complete
         user information including name, ID, public key, and creation timestamp.
 
-        Returns:
-            list: A list of dictionaries, each containing a complete user record.
-                 Returns an empty list if no users are stored.
         """
         users = []
         users_array = self.doc["users"]
