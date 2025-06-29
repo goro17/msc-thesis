@@ -23,6 +23,11 @@ ADD crdtsign/. /app
 WORKDIR /app
 RUN uv sync --locked
 
-# Run the application
+# The web application is deployed on port 5000
 EXPOSE 5000
-CMD [ "uv", "run", "crdtsign", "app", "--host", "0.0.0.0", "--port", "5000" ]
+
+# The server runs on port 8765
+EXPOSE 8765
+
+# Run the project [default: server]
+CMD [ "uv", "run", "crdtsign", "server", "--host", "0.0.0.0", "--port", "8765" ]
