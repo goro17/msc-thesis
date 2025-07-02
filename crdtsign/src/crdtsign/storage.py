@@ -7,7 +7,7 @@ from typing import Optional
 
 import shortuuid
 from httpx_ws import aconnect_ws
-from pycrdt import Array, Doc, Map, Provider
+from pycrdt import Doc, Map, Provider
 from pycrdt.websocket.websocket import HttpxWebsocket
 from rich.console import Console
 from rich.table import Table
@@ -26,7 +26,7 @@ class FileSignatureStorage:
         room_name: str = "file-signatures",
         from_file: bool = False,
     ):
-        """Initialize a new FileSignatureStorage.
+        """Initialize a new FileSignatureStorage instance.
 
         Args:
             client_id: Unique identifier for this client
@@ -257,25 +257,99 @@ class FileSignatureStorage:
 class UserStorage:
     """Storage for user date using pycrdt's CRDT data structures."""
 
-    def __init__(self, from_file: bool = False):
+    def __init__(
+        self,
+        client_id: str,
+        host: str,
+        port: int,
+        room_name: str = "users",
+        from_file: bool = False,
+    ):
         """Initialize a new UserStorage instance.
 
-        Creates a new CRDT document with an empty array for storing user data.
-        If requested, attempts to load existing user data from the default
-        storage location.
-
         Args:
+            client_id: Unique identifier for this client
+            host: Hostname or IP address of the server
+            port: Port number of the server
+            room_name: Name of the room in the server for this client
             from_file: If True, attempts to load the document state from the default
                       storage file (.storage/users.bin). Defaults to False.
         """
+        self.client_id = client_id
+        self.host = "server" if os.environ.get("IS_CONTAINER") == "true" else host
+        self.port = port
+        self.room_name = room_name
         self.doc = Doc()
-
-        # Create a root map for our document
-        self.doc["users"] = Array([])
+        self.users_map = self.doc.get("users", type=Map)
+        self._connected = False
+        self._ws_provider = None
+        self._provider_task = None
 
         # Load from file if requested
         if from_file:
             self.load_users_from_file()
+
+    async def _create_ws_provider(
+        self,
+        host,
+        port,
+        room_name,
+        doc=None,
+        log=None,
+    ):
+        """Create a websocket provider for connecting to the server."""
+        doc = Doc() if doc is None else doc
+        async with (
+            aconnect_ws(f"http://{host}:{port}/{room_name}") as websocket,
+            Provider(doc, HttpxWebsocket(websocket, room_name), log=log)
+        ):
+            yield doc
+
+    async def connect(self):
+        """Connect to sync server and start persistent synchronization."""
+        logger.info(f"Client {self.client_id} connecting to http://{self.host}:{self.port}/{self.room_name}/...")
+
+        # Create the websocket provider generator
+        self._ws_provider = self._create_ws_provider(
+            self.host,
+            self.port,
+            self.room_name,
+            self.doc,
+        )
+
+        # Get the provider data from the async generator
+        try:
+            doc = await anext(self._ws_provider)
+
+            # Update our document reference to the connected one
+            self.doc = doc
+            self.users_map = doc.get("users", type=Map)
+            self.users_map.observe(self._on_map_change)
+            self._connected = True
+
+            logger.info(f"Client {self.client_id} successfully connected.")
+        except Exception as e:
+            logger.error(f"Failed to connect client {self.client_id}: {e}")
+            self._connected = False
+            if self._ws_provider:
+                await self._ws_provider.aclose()
+                self._ws_provider = None
+
+    async def disconnect(self):
+        """Disconnect from the sync server and cleanup resources."""
+        if self._ws_provider:
+            try:
+                await self._ws_provider.aclose()
+            except Exception as e:
+                logger.error(f"Error during disconnect for client {self.client_id}: {e}")
+            finally:
+                self._ws_provider = None
+                self._connected = False
+                logger.info(f"Client {self.client_id} disconnected.")
+
+    def _on_map_change(self, event):
+        """Handle changes to the shared map."""
+        logger.info(f"Client {self.client_id} detected change: {event}")
 
     def add_user(
         self,
@@ -300,17 +374,15 @@ class UserStorage:
                     Defaults to False.
 
         """
-        user_map = Map(
-            {
-                "name": user_name,
-                "id": user_id,
-                "public_key": user_public_key,
-                "created_on": str(created_on.isoformat()),
-            }
-        )
+        user = {
+            "name": user_name,
+            "id": user_id,
+            "public_key": user_public_key,
+            "created_on": str(created_on.isoformat()),
+        }
 
-        # Add the file map to the files array first to integrate it with the document
-        self.doc["users"].append(user_map)
+        with self.doc.transaction():
+            self.users_map[user["id"]] = user
 
         if persist:
             self.save_users_to_file()
@@ -363,29 +435,19 @@ class UserStorage:
 
         """
         users = []
-        users_array = self.doc["users"]
 
-        for i in range(len(users_array)):
-            user_map = users_array[i]
-            users.append(dict(user_map))
+        for _, user in self.users_map.items():
+            users.append(dict(user))
 
         return users
 
-    def find_user(self, user_id: str):
-        """Find a user by ID.
+    def get_user_public_key(self, user_id: str):
+        """Retrieve the public key of a user by its ID.
 
         Args:
-            user_id: ID of the user to find
-
-        Returns:
-            dict or None: The user if found, None otherwise
+            user_id: ID of the user to retrieve the public key for
         """
-        users = self.doc["users"]
+        user = self.users_map[user_id]
 
-        for i in range(len(users)):
-            user_map = users[i]
-            if user_map["id"] == user_id:
-                return dict(user_map)
-
-        return None
-
+        if user:
+            return user["public_key"]

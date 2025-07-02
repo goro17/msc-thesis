@@ -47,7 +47,12 @@ file_storage = FileSignatureStorage(
     port=8765,
     from_file=True if Path(".storage/signatures.bin").exists() else False
 )
-user_storage = UserStorage(from_file=True if Path(".storage/users.bin").exists() else False)
+user_storage = UserStorage(
+    client_id=user.user_id,
+    host="0.0.0.0",
+    port=8765,
+    from_file=True if Path(".storage/users.bin").exists() else False
+)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -200,8 +205,14 @@ async def verify_signature():
         # Load the public key
         public_key = load_public_key(bytes.fromhex(public_key_hex))
 
+        # Hash the file content
+        with open(file_path, "rb") as f:
+            file_content = f.read()
+
+        digest = hashlib.sha256(file_content).digest()
+
         # Verify the signature
-        is_valid = is_verified_signature(file_path, bytes.fromhex(signature_hex), public_key)
+        is_valid = is_verified_signature(digest, bytes.fromhex(signature_hex), public_key)
 
         # Clean up the uploaded file
         os.unlink(file_path)
@@ -245,9 +256,17 @@ async def validate_signature(file_id):
             if "expiration_date" in sig:
                 sig["expiration_date"] = expiration_date.isoformat()
 
-            return jsonify(
-                {"is_valid": not is_expired, "is_expired": is_expired, "message": expiration_message, "signature": sig}
-            )
+            digest = bytes.fromhex(sig["hash"])
+            signature = bytes.fromhex(sig["signature"])
+            public_key_hex = user_storage.get_user_public_key(sig["user_id"])
+            public_key = load_public_key(bytes.fromhex(public_key_hex))
+
+            return jsonify({
+                "is_valid": not is_expired and is_verified_signature(digest, signature, public_key), 
+                "is_expired": is_expired,
+                "message": expiration_message,
+                "signature": sig
+            })
 
     return jsonify({"error": "Signature not found"}), 404
 
@@ -275,6 +294,7 @@ async def get_user():
 async def run_app(host: str, port: int):
     """Connect the storage to the server and run the Quart application."""
     await file_storage.connect()
+    await user_storage.connect()
 
     config = Config()
     config.bind = [f"{host}:{port}"]

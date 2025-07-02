@@ -38,12 +38,12 @@ def sign(file_path: Path, private_key: Ed448PrivateKey) -> bytes:
 
 
 def is_verified_signature(
-    file_path: Path, signature: bytes, public_key: Ed448PublicKey
+    file_hash: bytes, signature: bytes, public_key: Ed448PublicKey
 ) -> bool:
-    """Verify the signature of a file with the signer's public key.
+    """Verify the signature of a file with the signer's public key and the file's SHA-256 hash.
 
     Args:
-        file_path: Path to the file to verify
+        file_hash: Hash of the file to verify
         signature: The cryptographic signature to verify
         public_key: Ed448 public key of the signer
 
@@ -53,15 +53,8 @@ def is_verified_signature(
     Note:
         The function hashes the file content using SHA-256 before verification
     """
-    with open(file_path, "rb") as f:
-        file = f.read()
-
-    # Hash the file content
-    digest = hashlib.sha256(file).digest()
-
-    # Verify the signature
     try:
-        public_key.verify(signature, digest)
+        public_key.verify(signature, file_hash)
         return True
     except InvalidSignature:
         return False

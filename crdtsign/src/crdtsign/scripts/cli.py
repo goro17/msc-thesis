@@ -112,8 +112,14 @@ def sign_command(file: Path, verify: bool, table: bool):
         public_string = click.prompt("Public key", type=str)
         public_key = load_public_key(bytes.fromhex(public_string))
 
+        # Hash the file content
+        with open(file, "rb") as f:
+            file_content = f.read()
+
+        digest = hashlib.sha256(file_content).digest()
+
         # Verify the file's signature using the public key
-        if is_verified_signature(file, bytes.fromhex(signature), public_key):
+        if is_verified_signature(digest, bytes.fromhex(signature), public_key):
             valid_word = click.style("valid", fg="green", bold=True)
             click.echo("\nThe provided signature is " + valid_word + ".")
         else:
