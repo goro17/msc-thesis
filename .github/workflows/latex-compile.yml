@@ -20,6 +20,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - uses: wtfjoke/setup-tectonic@v3
+        with:
+          biber-version: 'latest'
       - name: Run tectonic
         run: tectonic msc-thesis.tex
       - name: Check for successful compilation
