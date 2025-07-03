@@ -262,7 +262,7 @@ async def validate_signature(file_id):
             public_key = load_public_key(bytes.fromhex(public_key_hex))
 
             return jsonify({
-                "is_valid": not is_expired and is_verified_signature(digest, signature, public_key), 
+                "is_valid": not is_expired and is_verified_signature(digest, signature, public_key),
                 "is_expired": is_expired,
                 "message": expiration_message,
                 "signature": sig
