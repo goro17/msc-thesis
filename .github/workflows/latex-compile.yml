@@ -3,8 +3,8 @@ on:
   push:
     branches:
       - '*'
-    paths:
-      - 'docs/thesis/**'
+    # paths:
+    #   - 'docs/thesis/**'
 jobs:
   latex-job:
     runs-on: ubuntu-latest
@@ -19,12 +19,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Create the output directory
-        run: mkdir out
-      - name: Compilation
-        uses: vinay0410/tectonic-action@master
-        with:
-          tex_path: 'msc_thesis.tex'
+      - uses: wtfjoke/setup-tectonic@v3
+      - name: Run tectonic
+        run: tectonic msc-thesis.tex
       - name: Check for successful compilation
         run: ls -la msc-thesis.pdf
       - name: Get timestamp-based tag
