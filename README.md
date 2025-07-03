@@ -37,4 +37,6 @@ git clone https://github.com/goro17/msc-thesis.git
 docker-compose up --build -d
 ```
 
-3. Access the web interface through the browser at the desired host+port (default: [127.0.0.1:5000](http://127.0.0.1:5000/)).
+3. Access the web interface through the browser at the desired host+port (default: [127.0.0.1:5001](http://127.0.0.1:5001/)).
+
+> For the sake of demonstration, two additional clients can be accessed at [127.0.0.1:5002](http://127.0.0.1:5002/) and [127.0.0.1:5003](http://127.0.0.1:5003/).

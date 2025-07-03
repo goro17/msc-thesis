@@ -3,8 +3,8 @@ on:
   push:
     branches:
       - '*'
-    # paths:
-    #   - 'docs/thesis/**'
+    paths:
+      - 'docs/thesis/**'
 jobs:
   latex-job:
     runs-on: ubuntu-latest
