@@ -8,7 +8,7 @@ services:
     container_name: crdtsign-server
     networks:
       - crdtsign-network
-    command: uv run crdtsign server --port 8765
+    command: uv run crdtsign server --host 0.0.0.0 --port 8765
     environment:
       - PYTHONBUFFERED=1
     healthcheck:

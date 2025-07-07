@@ -60,11 +60,17 @@ class FileSignatureStorage:
     ):
         """Create a websocket provider for connecting to the server."""
         doc = Doc() if doc is None else doc
-        async with (
-            aconnect_ws(f"http://{host}:{port}/{room_name}") as websocket,
-            Provider(doc, HttpxWebsocket(websocket, room_name), log=log)
-        ):
-            yield doc
+
+        try:
+            async with (
+                aconnect_ws(f"http://{host}:{port}/{room_name}") as websocket,
+                Provider(doc, HttpxWebsocket(websocket, room_name), log=log)
+            ):
+                yield doc
+        except Exception as e:
+            logger.error(f"Error in websocket provider: {e}")
+        finally:
+            await self._ws_provider.aclose() if self._ws_provider else None
 
     async def connect(self):
         """Connect to sync server and start persistent synchronization."""
@@ -299,11 +305,17 @@ class UserStorage:
     ):
         """Create a websocket provider for connecting to the server."""
         doc = Doc() if doc is None else doc
-        async with (
-            aconnect_ws(f"http://{host}:{port}/{room_name}") as websocket,
-            Provider(doc, HttpxWebsocket(websocket, room_name), log=log)
-        ):
-            yield doc
+
+        try:
+            async with (
+                aconnect_ws(f"http://{host}:{port}/{room_name}") as websocket,
+                Provider(doc, HttpxWebsocket(websocket, room_name), log=log)
+            ):
+                yield doc
+        except Exception as e:
+            logger.error(f"Error in websocket provider: {e}")
+        finally:
+            await self._ws_provider.aclose() if self._ws_provider else None
 
     async def connect(self):
         """Connect to sync server and start persistent synchronization."""

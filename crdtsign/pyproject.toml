@@ -1,6 +1,6 @@
 [project]
 name = "crdtsign"
-version = "0.3.0"
+version = "0.4.0"
 description = ""
 authors = [
     {name = "gf",email = "email@example.com"}
