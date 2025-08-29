@@ -17,7 +17,7 @@ ENV PATH="/root/.local/bin/:$PATH"
 
 # Install the project
 # Copy the project into the image
-ADD crdtsign/. /app
+ADD crdtsign/core/. /app
 
 # Sync the project into a new environment, asserting the lockfile is up to date
 WORKDIR /app
