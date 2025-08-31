@@ -32,14 +32,10 @@ def sign(file_path: Path, private_key: Ed448PrivateKey) -> bytes:
     # Sign the hashed content
     signature = private_key.sign(digest)
 
-    # TODO: Persist the hash+signature pair in the CRDT storage
-
     return signature
 
 
-def is_verified_signature(
-    file_hash: bytes, signature: bytes, public_key: Ed448PublicKey
-) -> bool:
+def is_verified_signature(file_hash: bytes, signature: bytes, public_key: Ed448PublicKey) -> bool:
     """Verify the signature of a file with the signer's public key and the file's SHA-256 hash.
 
     Args:

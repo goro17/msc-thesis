@@ -45,13 +45,10 @@ file_storage = FileSignatureStorage(
     client_id=user.user_id,
     host="0.0.0.0",
     port=8765,
-    from_file=True if Path(".storage/signatures.bin").exists() else False
+    from_file=True if Path(".storage/signatures.bin").exists() else False,
 )
 user_storage = UserStorage(
-    client_id=user.user_id,
-    host="0.0.0.0",
-    port=8765,
-    from_file=True if Path(".storage/users.bin").exists() else False
+    client_id=user.user_id, host="0.0.0.0", port=8765, from_file=True if Path(".storage/users.bin").exists() else False
 )
 
 
@@ -119,7 +116,7 @@ async def sign_file():
     file = files["file"]
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
-    # Save the uploaded file
+    # Save a duplicate of the uploaded file in temporary storage
     filename = secure_filename(file.filename)
     file_path = Path(app.config["UPLOAD_FOLDER"]) / filename
     await file.save(file_path)
@@ -137,7 +134,6 @@ async def sign_file():
     digest = hashlib.sha256(file_content).digest()
 
     # Use the registered user information from the user management system
-    # This ensures the user info is consistent across sessions
     user_id = user.user_id
     username = user.username
     # Handle expiration date if provided
@@ -164,7 +160,7 @@ async def sign_file():
         persist=True,
     )
 
-    # Clean up the uploaded file
+    # Clean up the temporary file duplicate
     os.unlink(file_path)
 
     return jsonify(
@@ -261,12 +257,14 @@ async def validate_signature(file_id):
             public_key_hex = user_storage.get_user_public_key(sig["user_id"])
             public_key = load_public_key(bytes.fromhex(public_key_hex))
 
-            return jsonify({
-                "is_valid": not is_expired and is_verified_signature(digest, signature, public_key),
-                "is_expired": is_expired,
-                "message": expiration_message,
-                "signature": sig
-            })
+            return jsonify(
+                {
+                    "is_valid": not is_expired and is_verified_signature(digest, signature, public_key),
+                    "is_expired": is_expired,
+                    "message": expiration_message,
+                    "signature": sig,
+                }
+            )
 
     return jsonify({"error": "Signature not found"}), 404
 
@@ -290,6 +288,7 @@ async def get_user():
     return jsonify(
         {"user_id": user.user_id, "username": user.username, "registration_date": user.registration_date.isoformat()}
     )
+
 
 async def run_app(host: str, port: int):
     """Connect the storage to the server and run the Quart application."""

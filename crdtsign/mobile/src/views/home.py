@@ -31,11 +31,12 @@ class HomeView:
                                                         content=ft.Text("Update"),
                                                         # bgcolor=ft.CupertinoColors.LIGHT_BACKGROUND_GRAY,
                                                         opacity_on_click=0.3,
+                                                        on_click=lambda _: self.file_signature_card_container.update_container(),
                                                     ),
                                                     ft.CupertinoFilledButton(
                                                         content=ft.Text("Create new"),
                                                         opacity_on_click=0.3,
-                                                        on_click=lambda _: page.go("/create"),
+                                                        on_click=lambda _: self.page.go("/create"),
                                                     ),
                                                 ],
                                                 alignment=ft.MainAxisAlignment.SPACE_EVENLY,
@@ -43,7 +44,7 @@ class HomeView:
                                             ),
                                             ft.Container(
                                                 content=self.file_signature_card_container,
-                                                height=page.height - 200,
+                                                height=self.page.height - 200,
                                                 expand=False,
                                             ),
                                         ]

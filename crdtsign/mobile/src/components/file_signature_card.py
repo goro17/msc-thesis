@@ -3,6 +3,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, Callable
 
+from utils.storage import file_storage
+from crdtsign.sign import is_verified_signature, load_keypair
+
 @dataclass
 class FileSignature:
     file_id: str
@@ -64,6 +67,7 @@ class FileSignatureCard:
                     ft.CupertinoButton(
                         content=ft.Text("Verify Signature"),
                         color=ft.CupertinoColors.SYSTEM_GREEN,
+                        on_click=self.verify_signature,
                     ),
                 ], alignment=ft.MainAxisAlignment.END, expand=True),
                 ft.Container(height=10),  # Spacing
@@ -74,12 +78,14 @@ class FileSignatureCard:
             padding=10,
         )
 
-    def delete_card(self, e):
+    async def delete_card(self, e):
         """Show confirmation dialog and delete card if confirmed"""
-        def on_confirm_delete(e):
+        async def on_confirm_delete(e):
+            await file_storage.remove_file_signature(self.file_id, persist=True)
             # Remove card from stack by ID
             self.delete_callback(self)
             dlg.open = False
+            e.page.open(ft.SnackBar(ft.Text(f"File '{self.file_name}' was deleted.")))
             e.page.update()
 
         def on_cancel_delete(e):
@@ -89,6 +95,7 @@ class FileSignatureCard:
         # Create confirmation dialog
         dlg = ft.AlertDialog(
             modal=True,
+            adaptive=True,
             title=ft.Text("Confirm Deletion"),
             content=ft.Text(f"Are you sure you want to delete '{self.file_name}'? This action cannot be undone."),
             actions=[
@@ -99,3 +106,17 @@ class FileSignatureCard:
         )
 
         e.page.open(dlg)
+
+    def verify_signature(self, e):
+        if self.expiration_date and self.expiration_date < datetime.now():
+            e.page.open(ft.SnackBar(ft.Text(f"Signature for '{self.file_name}' has EXPIRED ({datetime.strftime(self.expiration_date, '%Y-%m-%d %H:%M:%S')}).", color="#531b15"), bgcolor="#e3b7b4"))
+            return
+        else:
+            _, public_key = load_keypair()
+            verified = is_verified_signature(bytes.fromhex(self.file_hash), bytes.fromhex(self.signature), public_key)
+            if verified:
+                e.page.open(ft.SnackBar(
+                    ft.Text(f"Signature for '{self.file_name}' is VALID.", color="#122608"), bgcolor="#cbf0b7"),
+                    )
+            else:
+                e.page.open(ft.SnackBar(ft.Text(f"Signature for '{self.file_name}' is NOT VALID.")))

@@ -15,6 +15,7 @@ from rich.table import Table
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class FileSignatureStorage:
     """Storage for file signatures using pycrdt's CRDT data structures."""
 
@@ -64,7 +65,7 @@ class FileSignatureStorage:
         try:
             async with (
                 aconnect_ws(f"http://{host}:{port}/{room_name}") as websocket,
-                Provider(doc, HttpxWebsocket(websocket, room_name), log=log)
+                Provider(doc, HttpxWebsocket(websocket, room_name), log=log),
             ):
                 yield doc
         except Exception as e:
@@ -145,13 +146,13 @@ class FileSignatureStorage:
         display_name = username if username else user_id
 
         file = {
-                "id": shortuuid.uuid(),
-                "name": file_name,
-                "hash": file_hash,
-                "signature": signature,
-                "user_id": user_id,
-                "username": display_name,
-                "signed_on": str(signed_on.isoformat()),
+            "id": shortuuid.uuid(),
+            "name": file_name,
+            "hash": file_hash,
+            "signature": signature,
+            "user_id": user_id,
+            "username": display_name,
+            "signed_on": str(signed_on.isoformat()),
         }
 
         # Add expiration date if provided
@@ -309,7 +310,7 @@ class UserStorage:
         try:
             async with (
                 aconnect_ws(f"http://{host}:{port}/{room_name}") as websocket,
-                Provider(doc, HttpxWebsocket(websocket, room_name), log=log)
+                Provider(doc, HttpxWebsocket(websocket, room_name), log=log),
             ):
                 yield doc
         except Exception as e:
