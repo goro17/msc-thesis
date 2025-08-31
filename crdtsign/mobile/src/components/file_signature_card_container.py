@@ -50,7 +50,7 @@ class FileSignatureCardContainer(ft.Column):
                 file_id=signature["id"],
                 file_name=signature["name"],
                 file_hash=signature["hash"],
-                signature=signature["signature"],
+                signature=signature["signature"] if isinstance(signature["signature"], str) else signature["signature"].hex(),
                 signed_by=signature["username"],
                 signed_id=signature["user_id"],
                 signed_at=datetime.fromisoformat(signature["signed_on"]).astimezone(datetime.now().tzinfo),

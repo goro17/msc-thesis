@@ -3,7 +3,7 @@
 import hashlib
 import os
 import tempfile
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from hypercorn import Config
@@ -126,7 +126,7 @@ async def sign_file():
 
     # Sign the file
     signature = sign(file_path, private_key)
-    sig_date = datetime.now()
+    sig_date = datetime.now().astimezone(datetime.now().tzinfo)
 
     # Hash the file content
     with open(file_path, "rb") as f:
@@ -143,7 +143,7 @@ async def sign_file():
     if expiration_str:
         try:
             # Parse the datetime-local input format (YYYY-MM-DDThh:mm)
-            expiration_date = datetime.fromisoformat(expiration_str.replace("Z", "+00:00"))
+            expiration_date = datetime.fromisoformat(expiration_str).astimezone(datetime.now().tzinfo)
         except ValueError as e:
             # If parsing fails, log the error and ignore the expiration date
             print(f"Error parsing expiration date: {e}")

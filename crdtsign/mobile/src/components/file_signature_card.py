@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, Callable
 
-from utils.storage import file_storage
-from crdtsign.sign import is_verified_signature, load_keypair
+from utils.storage import file_storage, user_storage
+from crdtsign.sign import is_verified_signature, load_keypair, load_public_key
 
 @dataclass
 class FileSignature:
@@ -65,7 +65,7 @@ class FileSignatureCard:
                         on_click=self.delete_card,
                     ),
                     ft.CupertinoButton(
-                        content=ft.Text("Verify Signature"),
+                        content=ft.Text("Validate"),
                         color=ft.CupertinoColors.SYSTEM_GREEN,
                         on_click=self.verify_signature,
                     ),
@@ -108,15 +108,16 @@ class FileSignatureCard:
         e.page.open(dlg)
 
     def verify_signature(self, e):
-        if self.expiration_date and self.expiration_date < datetime.now():
+        if self.expiration_date and self.expiration_date < datetime.now().astimezone(datetime.now().tzinfo):
             e.page.open(ft.SnackBar(ft.Text(f"Signature for '{self.file_name}' has EXPIRED ({datetime.strftime(self.expiration_date, '%Y-%m-%d %H:%M:%S')}).", color="#531b15"), bgcolor="#e3b7b4"))
             return
         else:
-            _, public_key = load_keypair()
+            public_key_hex = user_storage.get_user_public_key(self.signed_id)
+            public_key = load_public_key(bytes.fromhex(public_key_hex))
             verified = is_verified_signature(bytes.fromhex(self.file_hash), bytes.fromhex(self.signature), public_key)
             if verified:
                 e.page.open(ft.SnackBar(
-                    ft.Text(f"Signature for '{self.file_name}' is VALID.", color="#122608"), bgcolor="#cbf0b7"),
+                    ft.Text(f"Signature for '{self.file_name}' is VALID." + (f"Signature is valid until {datetime.strftime(self.expiration_date, '%Y-%m-%d %H:%M:%S')}." if self.expiration_date else f""), color="#122608"), bgcolor="#cbf0b7"),
                     )
             else:
                 e.page.open(ft.SnackBar(ft.Text(f"Signature for '{self.file_name}' is NOT VALID.")))
