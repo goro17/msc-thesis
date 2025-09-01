@@ -54,7 +54,7 @@ class CRDTSignApp:
 
         self.home_view = HomeView(self.page)
         self.create_view = CreateView(self.page)
-        self.registration_view = RegistrationView(self.page)
+        self.registration_view = self.create_registration_view()
 
         if self.page.platform == ft.PagePlatform.ANDROID or ft.PagePlatform.IOS:
             self.page.window.full_screen = True
@@ -80,7 +80,7 @@ class CRDTSignApp:
         if self.page.route == "/create":
             self.page.views.append(self.create_view.view)
         if self.page.route == "/registration":
-            self.page.views.append(self.registration_view.view)
+            self.page.views.append(self.registration_view)
         self.page.update()
 
     def handle_view_pop(self, view):
@@ -101,7 +101,7 @@ class CRDTSignApp:
             self.username_field.error_text = "Username cannot be empty"
             self.page.update()
 
-    def registration_view(self):
+    def create_registration_view(self):
         # Create the text field and store a reference to it
         self.username_field = ft.TextField(
             autofocus=True,
