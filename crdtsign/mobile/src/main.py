@@ -36,30 +36,24 @@ class CRDTSignApp:
         self.page = page
         self.page.title = "crdtSign"
         self.page.theme_mode = ft.ThemeMode.SYSTEM
-        self.page.theme = ft.Theme(
-            page_transitions=ft.PageTransitionsTheme(
-                android=ft.PageTransitionTheme.CUPERTINO,
-                ios=ft.PageTransitionTheme.CUPERTINO,
-                macos=ft.PageTransitionTheme.CUPERTINO,
-                linux=ft.PageTransitionTheme.CUPERTINO,
-                windows=ft.PageTransitionTheme.CUPERTINO,
-            )
-        )
         self.page.padding = 0
         self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+        self.page.scroll = ft.ScrollMode.ALWAYS
 
-        self.page.window.width = 400
-        self.page.window.height = 800
+        self.page.window.width = 500
+        self.page.window.height = 920
         self.page.window.resizable = False
 
+        if self.page.platform in [ft.PagePlatform.ANDROID, ft.PagePlatform.IOS]:
+            self.page.window.full_screen = True
+        
+        # Apply initial page configuration
+        self.page.update()
+
+        # Initialize views
         self.home_view = HomeView(self.page)
         self.create_view = CreateView(self.page)
         self.registration_view = self.create_registration_view()
-
-        if self.page.platform == ft.PagePlatform.ANDROID or ft.PagePlatform.IOS:
-            self.page.window.full_screen = True
-
-        self.page.scroll = ft.ScrollMode.ALWAYS
 
         self.page.update()
 

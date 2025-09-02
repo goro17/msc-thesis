@@ -44,7 +44,7 @@ class HomeView:
                                             ),
                                             ft.Container(
                                                 content=self.file_signature_card_container,
-                                                height=self.page.height - 200,
+                                                height=self.page.window.height - 200,
                                                 expand=False,
                                             ),
                                         ]
