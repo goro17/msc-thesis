@@ -94,6 +94,7 @@ class CRDTSignApp:
 
         if new_username and new_username.strip():
             setup_user(user, new_username)
+            self.create_view.signing_user.value = f"{new_username} <{user.user_id.split('user_')[-1]}>"
             self.page.go("/")
             self.page.update()
         else:
