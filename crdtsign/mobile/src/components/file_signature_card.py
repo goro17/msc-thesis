@@ -50,7 +50,7 @@ class FileSignatureCard:
             ft.CupertinoListTile(
                 notched=True,
                 title=ft.Text(self.file_name),
-                subtitle=ft.Text(f"{self.signed_by} <{self.signed_id}>"),
+                subtitle=ft.Text(f"{self.signed_by} <{self.signed_id.split('user_')[-1]}>"),
                 additional_info=ft.Text(
                     f"{datetime.strftime(self.signed_at, '%Y-%m-%d %H:%M:%S')}"
                 ),

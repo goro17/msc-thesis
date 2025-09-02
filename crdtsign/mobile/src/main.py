@@ -1,11 +1,13 @@
-import flet as ft
 import asyncio
+import os
+from pathlib import Path
+
+import flet as ft
 
 from views.create import CreateView
 from views.home import HomeView
 from views.registration import RegistrationView
 
-from pathlib import Path
 from crdtsign.user import User
 from crdtsign.storage import FileSignatureStorage, UserStorage
 from crdtsign.sign import new_keypair
@@ -124,10 +126,15 @@ class CRDTSignApp:
 
 async def main(page: ft.Page):
     """Main entry point"""
+    os.environ["FLET_SECRET_KEY"] = os.urandom(12).hex()
     await user_storage.connect()
     await file_storage.connect()
+
+    # Wait for WS connection to stabilize
+    await asyncio.sleep(0.5)
+
     app = CRDTSignApp(page)
 
 
 if __name__ == "__main__":
-    ft.app(main, view=ft.AppView.WEB_BROWSER)
+    ft.app(main, view=ft.AppView.WEB_BROWSER, upload_dir=os.getenv("FLET_APP_STORAGE_TEMP"))

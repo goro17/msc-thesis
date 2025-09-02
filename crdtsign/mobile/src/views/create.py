@@ -1,5 +1,6 @@
 import hashlib
 import flet as ft
+import os
 
 from datetime import datetime, timedelta
 
@@ -11,6 +12,7 @@ class CreateView:
         self.page = page
         self.pick_files_dialog = ft.FilePicker(
             on_result=self.pick_files_result,
+            on_upload=self.on_upload_progress,
         )
         self.selected_file = {
             "file_name": ft.Text("No file selected"),
@@ -101,22 +103,114 @@ class CreateView:
         )
 
     def pick_files_result(self, e: ft.FilePickerResultEvent):
-        self.selected_file["file_name"].value = (
-            ", ".join(map(lambda f: f.name, e.files)) if e.files else ""
-        )
-        self.selected_file["file_name"].weight = ft.FontWeight.BOLD
-        if e.files:
-            # Read file content and calculate hash
-            self.selected_file["file_path"] = e.files[0].path
-            with open(self.selected_file["file_path"], 'rb') as f:
-                file_content = f.read()
-            self.selected_file["file_digest"] = hashlib.sha256(
-                file_content
-            ).hexdigest()
-        self.selected_file["file_digest_display"].value = f"<{self.selected_file['file_digest'][:16]}...>"
+        try:
+            if e.files:
+                self.selected_file["file_name"].value = e.files[0].name
+                self.selected_file["file_name"].weight = ft.FontWeight.BOLD
+                self.selected_file["original_name"] = e.files[0].name
+                
+                print(f"File selected: {e.files[0].name}")
+                
+                # Show uploading status
+                self.selected_file["file_digest_display"].value = "Uploading..."
+                self.selected_file["file_name"].update()
+                self.selected_file["file_digest_display"].update()
+                
+                # Create upload file list for Flet's upload method
+                upload_list = [
+                    ft.FilePickerUploadFile(
+                        e.files[0].name,
+                        upload_url=self.page.get_upload_url(e.files[0].name, 60),  # 60 second timeout
+                    )
+                ]
+                
+                # Start upload using Flet's upload method
+                self.pick_files_dialog.upload(upload_list)
+                
+            else:
+                self._reset_file_selection()
+                
+        except Exception as e:
+            print(f"Error in pick_files_result: {e}")
+            self.page.open(ft.SnackBar(
+                ft.Text(f"Error selecting file: {str(e)}"),
+                bgcolor=ft.Colors.RED
+            ))
+            self._reset_file_selection()
+    
+    def on_upload_progress(self, e: ft.FilePickerUploadEvent):
+        """Handle file upload progress and completion"""
+        try:
+            print(f"Upload progress: {e.file_name} - {e.progress * 100:.1f}%")
+            
+            if e.progress == 1.0:  # Upload completed
+                print(f"Upload completed: {e.file_name}")
+                
+                # Get the uploaded file path
+                upload_dir = os.getenv("FLET_APP_STORAGE_TEMP")
+                uploaded_file_path = os.path.join(upload_dir, e.file_name)
+                
+                print(f"Looking for uploaded file at: {uploaded_file_path}")
+                
+                if os.path.exists(uploaded_file_path):
+                    # Read the uploaded file and calculate hash
+                    try:
+                        with open(uploaded_file_path, 'rb') as f:
+                            file_content = f.read()
+                        
+                        # Calculate hash from uploaded file
+                        file_hash = hashlib.sha256(file_content).hexdigest()
+                        
+                        # Store file info
+                        self.selected_file["file_digest"] = file_hash
+                        self.selected_file["file_path"] = uploaded_file_path
+                        
+                        # Update UI
+                        self.selected_file["file_digest_display"].value = f"<{file_hash[:16]}...>"
+                        self.selected_file["file_digest_display"].update()
+                        
+                        # Enable submit button
+                        self.submit_button.disabled = False
+                        self.submit_button.update()
+                        
+                        print(f"File hash calculated: {file_hash[:16]}...")
+                        
+                    except Exception as read_error:
+                        print(f"Error reading uploaded file: {read_error}")
+                        self.page.open(ft.SnackBar(
+                            ft.Text(f"Error reading uploaded file: {str(read_error)}"),
+                            bgcolor=ft.Colors.RED
+                        ))
+                        self._reset_file_selection()
+                else:
+                    print(f"Uploaded file not found at: {uploaded_file_path}")
+                    self.page.open(ft.SnackBar(
+                        ft.Text("Error: Uploaded file not found"),
+                        bgcolor=ft.Colors.RED
+                    ))
+                    self._reset_file_selection()
+            else:
+                # Show upload progress
+                progress_percent = e.progress * 100
+                self.selected_file["file_digest_display"].value = f"Uploading... {progress_percent:.1f}%"
+                self.selected_file["file_digest_display"].update()
+                
+        except Exception as ex:
+            print(f"Error in on_upload_progress: {ex}")
+            self.page.open(ft.SnackBar(
+                ft.Text(f"Upload error: {str(ex)}"),
+                bgcolor=ft.Colors.RED
+            ))
+            self._reset_file_selection()
+    
+    def _reset_file_selection(self):
+        """Helper to reset file selection state"""
+        self.selected_file["file_name"].value = "No file selected"
+        self.selected_file["file_name"].weight = ft.FontWeight.NORMAL
+        self.selected_file["file_digest_display"].value = ""
+        self.submit_button.disabled = True
         self.selected_file["file_name"].update()
         self.selected_file["file_digest_display"].update()
-        self.submit_button.disabled = False
         self.submit_button.update()
 
     def set_expiration_date(self, e):
@@ -139,24 +233,34 @@ class CreateView:
                 self.expiration_date,
                 persist=True,
             )
+            self.page.open(ft.SnackBar(ft.Text(f"File '{self.selected_file['file_name'].value}' was signed successfully.")))
+            # Cleanup after successful submission
+            self.reset_form()
 
             # Navigate to home and show success message
             self.page.go("/")
-            self.page.open(ft.SnackBar(ft.Text(f"File '{self.selected_file['file_name'].value}' was signed successfully.")))
 
-            # Cleanup after successful submission
-            self.reset_form()
         except Exception as ex:
-            # Show error message if something goes wrong
             self.page.open(ft.SnackBar(ft.Text(f"Error signing file: {str(ex)}")))
+
+    def _cleanup_uploaded_file(self):
+        if "file_path" in self.selected_file and self.selected_file["file_path"]:
+            uploaded_file_path = self.selected_file["file_path"]
+            try:
+                if os.path.exists(uploaded_file_path):
+                    os.remove(uploaded_file_path)
+                    print(f"Cleaned up uploaded file: {uploaded_file_path}")
+            except Exception as e:
+                print(f"Error cleaning up uploaded file: {e}")
 
     def reset_form(self):
         """Reset the form to initial state"""
-        self.selected_file = {
-            "file_name": ft.Text("No file selected"),
-            "file_digest": "",
-            "file_digest_display": ft.Text(),
-        }
+        # Clean up any existing uploaded file
+        self._cleanup_uploaded_file()
+        self.selected_file["file_name"].value = "No file selected"
+        self.selected_file["file_name"].weight = ft.FontWeight.NORMAL
+        self.selected_file["file_digest_display"].value = ""
+        self.selected_file["file_name"].update()
         self.expiration_date = None
         self.expiration_date_text.value = "Not set"
         self.expiration_date_text.update()
