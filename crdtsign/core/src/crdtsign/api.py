@@ -2,12 +2,14 @@
 
 import hashlib
 import os
+import signal
 import tempfile
 from datetime import date, datetime, timezone
 from pathlib import Path
 
 from hypercorn import Config
 from hypercorn.asyncio import serve
+from loguru import logger
 from quart import Quart, jsonify, render_template, request
 from werkzeug.utils import secure_filename
 
@@ -295,6 +297,35 @@ async def run_app(host: str, port: int):
     await file_storage.connect()
     await user_storage.connect()
 
+    # Set up graceful shutdown handler
+    shutdown_event = False
+    
+    def handle_shutdown(sig, frame):
+        nonlocal shutdown_event
+        logger.info("Shutdown signal received, cleaning up...")
+        shutdown_event = True
+    
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, handle_shutdown)
+    signal.signal(signal.SIGTERM, handle_shutdown)
+    
     config = Config()
     config.bind = [f"{host}:{port}"]
-    await serve(app, config)
+    try:
+        await serve(app, config)
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt received, shutting down...")
+    finally:
+        # Clean up storage connections
+        logger.info("Cleaning up storage connections...")
+        try:
+            await file_storage.disconnect()
+        except Exception as e:
+            logger.error(f"Error disconnecting file storage: {e}")
+        
+        try:
+            await user_storage.disconnect()
+        except Exception as e:
+            logger.error(f"Error disconnecting user storage: {e}")
+        
+        logger.info("Shutdown complete.")

@@ -6,12 +6,10 @@ from pathlib import Path
 
 from hypercorn import Config
 from hypercorn.asyncio import serve
+from loguru import logger
 from pycrdt import create_update_message
 from pycrdt.store import FileYStore
 from pycrdt.websocket import ASGIServer, WebsocketServer, YRoom
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 class ServerRoom(YRoom):

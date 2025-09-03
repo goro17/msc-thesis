@@ -5,15 +5,13 @@ import os
 from datetime import datetime
 from typing import Optional
 
+from loguru import logger
 import shortuuid
 from httpx_ws import aconnect_ws
 from pycrdt import Doc, Map, Provider
 from pycrdt.websocket.websocket import HttpxWebsocket
 from rich.console import Console
 from rich.table import Table
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 class FileSignatureStorage:
@@ -62,62 +60,98 @@ class FileSignatureStorage:
         """Create a websocket provider for connecting to the server."""
         doc = Doc() if doc is None else doc
 
+
+        self._websocket = None
+        self._provider = None
+        self._connection_task = None
+
         try:
-            async with (
-                aconnect_ws(f"http://{host}:{port}/{room_name}") as websocket,
-                Provider(doc, HttpxWebsocket(websocket, room_name), log=log),
-            ):
-                yield doc
+            # Create the websocket connection
+            self._websocket_context = aconnect_ws(f"http://{host}:{port}/{room_name}")
+            self._websocket = await self._websocket_context.__aenter__()
+
+            # Create the provider
+            self._provider_context = Provider(doc, HttpxWebsocket(self._websocket, room_name), log=log)
+            self._provider = await self._provider_context.__aenter__()
+
+            # Store contexts for cleanup
+            self._contexts = [self._provider_context, self._websocket_context]
+
+            return doc
+
         except Exception as e:
-            logger.error(f"Error in websocket provider: {e}")
-        finally:
-            await self._ws_provider.aclose() if self._ws_provider else None
+            logger.error(f"Error creating websocket provider: {e}")
+            # Clean up any partially created resources
+            await self._cleanup_provider_resources()
+            raise
+
+    async def _cleanup_provider_resources(self):
+        """Clean up websocket provider resources safely."""
+        import asyncio
+
+        # Clean up contexts in reverse order
+        if hasattr(self, '_contexts'):
+            for context in reversed(self._contexts):
+                try:
+                    await context.__aexit__(None, None, None)
+                except asyncio.CancelledError:
+                    # Handle cancellation gracefully - don't propagate
+                    logger.debug(f"[{self.room_name}] Context cleanup cancelled for client {self.client_id}")
+                except Exception as e:
+                    logger.debug(f"[{self.room_name}] Error cleaning up context for client {self.client_id}: {e}")
+            self._contexts = []
+
+        # Reset state
+        self._websocket = None
+        self._provider = None
 
     async def connect(self):
         """Connect to sync server and start persistent synchronization."""
         logger.info(f"Client {self.client_id} connecting to http://{self.host}:{self.port}/{self.room_name}/...")
 
-        # Create the websocket provider generator
-        self._ws_provider = self._create_ws_provider(
-            self.host,
-            self.port,
-            self.room_name,
-            self.doc,
-        )
-
-        # Get the provider data from the async generator
+        # Create the websocket provider
         try:
-            doc = await anext(self._ws_provider)
+            doc = await self._create_ws_provider(
+                self.host,
+                self.port,
+                self.room_name,
+                self.doc,
+            )
 
             # Update our document reference to the connected one
             self.doc = doc
             self.files_map = doc.get("files", type=Map)
             self.files_map.observe(self._on_map_change)
             self._connected = True
+            self._ws_provider = True  # Just mark as connected
 
-            logger.info(f"Client {self.client_id} successfully connected.")
+            logger.info(f"[{self.room_name}] Client {self.client_id} successfully connected.")
         except Exception as e:
-            logger.error(f"Failed to connect client {self.client_id}: {e}")
+            logger.error(f"[{self.room_name}] Failed to connect client {self.client_id}: {e}")
             self._connected = False
-            if self._ws_provider:
-                await self._ws_provider.aclose()
-                self._ws_provider = None
+            await self._cleanup_provider_resources()
+            self._ws_provider = None
 
     async def disconnect(self):
         """Disconnect from the sync server and cleanup resources."""
-        if self._ws_provider:
+        import asyncio
+
+        if self._ws_provider and self._connected:
             try:
-                await self._ws_provider.aclose()
+                await self._cleanup_provider_resources()
+            except asyncio.CancelledError:
+                # Handle cancellation gracefully during shutdown
+                logger.debug(f"[{self.room_name}] Disconnect cancelled for client {self.client_id}")
             except Exception as e:
-                logger.error(f"Error during disconnect for client {self.client_id}: {e}")
+                logger.error(f"[{self.room_name}] Error during disconnect for client {self.client_id}: {e}")
             finally:
                 self._ws_provider = None
                 self._connected = False
-                logger.info(f"Client {self.client_id} disconnected.")
+                logger.info(f"[{self.room_name}] Client {self.client_id} disconnected.")
 
     def _on_map_change(self, event):
         """Handle changes to the shared map."""
-        logger.info(f"Client {self.client_id} detected change: {event}")
+        logger.info(f"[{self.room_name}] Client {self.client_id} detected change: {event}")
 
     async def add_file_signature(
         self,
@@ -307,62 +341,97 @@ class UserStorage:
         """Create a websocket provider for connecting to the server."""
         doc = Doc() if doc is None else doc
 
+        self._websocket = None
+        self._provider = None
+        self._connection_task = None
+
         try:
-            async with (
-                aconnect_ws(f"http://{host}:{port}/{room_name}") as websocket,
-                Provider(doc, HttpxWebsocket(websocket, room_name), log=log),
-            ):
-                yield doc
+            # Create the websocket connection
+            self._websocket_context = aconnect_ws(f"http://{host}:{port}/{room_name}")
+            self._websocket = await self._websocket_context.__aenter__()
+
+            # Create the provider
+            self._provider_context = Provider(doc, HttpxWebsocket(self._websocket, room_name), log=log)
+            self._provider = await self._provider_context.__aenter__()
+
+            # Store contexts for cleanup
+            self._contexts = [self._provider_context, self._websocket_context]
+
+            return doc
+
         except Exception as e:
-            logger.error(f"Error in websocket provider: {e}")
-        finally:
-            await self._ws_provider.aclose() if self._ws_provider else None
+            logger.error(f"Error creating websocket provider: {e}")
+            # Clean up any partially created resources
+            await self._cleanup_provider_resources()
+            raise
+
+    async def _cleanup_provider_resources(self):
+        """Clean up websocket provider resources safely."""
+        import asyncio
+
+        # Clean up contexts in reverse order
+        if hasattr(self, '_contexts'):
+            for context in reversed(self._contexts):
+                try:
+                    await context.__aexit__(None, None, None)
+                except asyncio.CancelledError:
+                    # Handle cancellation gracefully - don't propagate
+                    logger.debug(f"[{self.room_name}] Context cleanup cancelled for client {self.client_id}")
+                except Exception as e:
+                    logger.debug(f"[{self.room_name}] Error cleaning up context for client {self.client_id}: {e}")
+            self._contexts = []
+
+        # Reset state
+        self._websocket = None
+        self._provider = None
 
     async def connect(self):
         """Connect to sync server and start persistent synchronization."""
         logger.info(f"Client {self.client_id} connecting to http://{self.host}:{self.port}/{self.room_name}/...")
 
-        # Create the websocket provider generator
-        self._ws_provider = self._create_ws_provider(
-            self.host,
-            self.port,
-            self.room_name,
-            self.doc,
-        )
-
-        # Get the provider data from the async generator
+        # Create the websocket provider
         try:
-            doc = await anext(self._ws_provider)
+            doc = await self._create_ws_provider(
+                self.host,
+                self.port,
+                self.room_name,
+                self.doc,
+            )
 
             # Update our document reference to the connected one
             self.doc = doc
             self.users_map = doc.get("users", type=Map)
             self.users_map.observe(self._on_map_change)
             self._connected = True
+            self._ws_provider = True  # Just mark as connected
 
-            logger.info(f"Client {self.client_id} successfully connected.")
+            logger.info(f"[{self.room_name}] Client {self.client_id} successfully connected.")
         except Exception as e:
-            logger.error(f"Failed to connect client {self.client_id}: {e}")
+            logger.error(f"[{self.room_name}] Failed to connect client {self.client_id}: {e}")
             self._connected = False
-            if self._ws_provider:
-                await self._ws_provider.aclose()
-                self._ws_provider = None
+            await self._cleanup_provider_resources()
+            self._ws_provider = None
 
     async def disconnect(self):
         """Disconnect from the sync server and cleanup resources."""
-        if self._ws_provider:
+        import asyncio
+
+        if self._ws_provider and self._connected:
             try:
-                await self._ws_provider.aclose()
+                await self._cleanup_provider_resources()
+            except asyncio.CancelledError:
+                # Handle cancellation gracefully during shutdown
+                logger.debug(f"[{self.room_name}] Disconnect cancelled for client {self.client_id}")
             except Exception as e:
                 logger.error(f"Error during disconnect for client {self.client_id}: {e}")
             finally:
                 self._ws_provider = None
                 self._connected = False
-                logger.info(f"Client {self.client_id} disconnected.")
+                logger.info(f"[{self.room_name}] Client {self.client_id} disconnected.")
 
     def _on_map_change(self, event):
         """Handle changes to the shared map."""
-        logger.info(f"Client {self.client_id} detected change: {event}")
+        logger.info(f"[{self.room_name}] Client {self.client_id} detected change: {event}")
 
     def add_user(
         self,
