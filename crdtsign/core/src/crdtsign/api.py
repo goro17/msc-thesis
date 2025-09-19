@@ -66,9 +66,9 @@ async def index():
         if "username" in form:
             username = form.get("username")
         # Only allow setting username if it's not already set
-        if not user.username:
-            # Re-initialize user with the provided username
-            user = User(username=username)
+        if username and not user.username:
+            # Register the user with the chosen username
+            user.set_username(username)
 
             _, public_key = new_keypair(persist=True)
 
