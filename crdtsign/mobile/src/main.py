@@ -15,11 +15,10 @@ from crdtsign.sign import new_keypair
 from utils.storage import user, user_storage, file_storage
 
 
-
-def setup_user(user: User, new_username: str):
-    if not user.username:
-        # Re-initialize user with the provided username
-        user = User(username=new_username)
+async def setup_user(user: User, new_username: str):
+    if new_username and not user.username:
+        # Register the user with the provided username
+        user.set_username(new_username)
 
         _, public_key = new_keypair(persist=True)
 
@@ -31,6 +30,7 @@ def setup_user(user: User, new_username: str):
             user.registration_date,
             persist=True,
         )
+
 
 class CRDTSignApp:
     def __init__(self, page: ft.Page):
@@ -48,10 +48,11 @@ class CRDTSignApp:
 
         if self.page.platform in [ft.PagePlatform.ANDROID, ft.PagePlatform.IOS]:
             self.page.window.full_screen = True
-        
+
         # Apply initial page configuration
         self.page.update()
 
+    async def start_views_and_routes(self):
         # Initialize views
         self.home_view = HomeView(self.page)
         self.create_view = CreateView(self.page)
@@ -70,7 +71,7 @@ class CRDTSignApp:
     def handle_route_change(self, route):
         self.page.views.clear()
         # Always refresh the container when navigating to home
-        if hasattr(self.home_view, 'file_signature_card_container'):
+        if hasattr(self.home_view, "file_signature_card_container"):
             self.home_view.file_signature_card_container.update_container()
         self.page.views.append(self.home_view.view)
         if self.page.route == "/create":
@@ -84,13 +85,15 @@ class CRDTSignApp:
         top_view = self.page.views[-1]
         self.page.go(top_view.route)
 
-    def handle_username_submit(self, e):
+    async def handle_username_submit(self, e):
         # Get the username from the text field
         new_username = self.username_field.value
 
         if new_username and new_username.strip():
-            setup_user(user, new_username)
-            self.create_view.signing_user.value = f"{new_username} <{user.user_id.split('user_')[-1]}>"
+            await setup_user(user, new_username)
+            self.create_view.signing_user.value = (
+                f"{new_username} <{user.user_id.split('user_')[-1]}>"
+            )
             self.page.go("/")
             self.page.update()
         else:
@@ -103,7 +106,7 @@ class CRDTSignApp:
         self.username_field = ft.TextField(
             autofocus=True,
             label="Username",
-            on_submit=self.handle_username_submit
+            on_submit=self.handle_username_submit,
         )
 
         return ft.View(
@@ -115,14 +118,19 @@ class CRDTSignApp:
                 ft.Container(
                     content=ft.Column(
                         [
-                            ft.Text("Please enter a username to get started. This username will be associated with your signatures and cannot be changed later."),
+                            ft.Text(
+                                "Please enter a username to get started. This username will be associated with your signatures and cannot be changed later."
+                            ),
                             self.username_field,
-                            ft.FilledButton(text="Register", on_click=self.handle_username_submit),
+                            ft.FilledButton(
+                                text="Register", on_click=self.handle_username_submit
+                            ),
                         ],
                     ),
                 ),
             ],
         )
+
 
 async def main(page: ft.Page):
     """Main entry point"""
@@ -134,7 +142,10 @@ async def main(page: ft.Page):
     await asyncio.sleep(0.5)
 
     app = CRDTSignApp(page)
+    await app.start_views_and_routes()
 
 
 if __name__ == "__main__":
-    ft.app(main, view=ft.AppView.WEB_BROWSER, upload_dir=os.getenv("FLET_APP_STORAGE_TEMP"))
+    ft.app(
+        main, view=ft.AppView.WEB_BROWSER, upload_dir=os.getenv("FLET_APP_STORAGE_TEMP")
+    )

@@ -19,7 +19,7 @@ class User:
     # The generated user file stored in the .storage/cache directory.
     CACHE_DIR = Path(".storage/cache")
 
-    def __init__(self, user_id: Optional[str] = None, username: Optional[str] = None, force_new: bool = False):
+    def __init__(self, user_id: Optional[str] = None, username: Optional[str] = None):
         """Initialize a User instance.
 
         This method automatically handles loading existing user data or creating new user data.
@@ -49,12 +49,6 @@ class User:
             self.user_id = loaded_data["user_id"]
             self.username = loaded_data["username"]
             self.registration_date = loaded_data["registration_date"]
-
-            # Update username if provided and not already set
-            if username and not self.username:
-                self.username = username
-                self._save_to_file()
-                logging.info(f"Updated username for existing user ID: {self.user_id} to: {username}")
         else:
             # Create new user
             self.user_id = user_id if user_id else self._generate_user_id()
@@ -122,6 +116,12 @@ class User:
                 return {
                     "user_id": user_data.get("user_id"),
                     "username": user_data.get("username"),
-                    "registration_date": registration_date
+                    "registration_date": registration_date,
                 }
         return None
+
+    def set_username(self, username: str):
+        """Register the connected user with the given username."""
+        self.username = username
+        self._save_to_file()
+        logging.info(f"{self.user_id} successfully registered as '{self.username}'")
