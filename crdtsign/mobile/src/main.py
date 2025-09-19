@@ -1,15 +1,13 @@
 import asyncio
 import os
-from pathlib import Path
 
 import flet as ft
 
 from views.create import CreateView
 from views.home import HomeView
-from views.registration import RegistrationView
 
 from crdtsign.user import User
-from crdtsign.storage import FileSignatureStorage, UserStorage
+
 from crdtsign.sign import new_keypair
 
 from utils.storage import user, user_storage, file_storage
@@ -41,6 +39,7 @@ class CRDTSignApp:
         self.page.padding = 0
         self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
         self.page.scroll = ft.ScrollMode.ALWAYS
+        self.page.bgcolor = "#f3f4f6"
 
         self.page.window.width = 500
         self.page.window.height = 920
@@ -103,9 +102,8 @@ class CRDTSignApp:
 
     def create_registration_view(self):
         # Create the text field and store a reference to it
-        self.username_field = ft.TextField(
+        self.username_field = ft.CupertinoTextField(
             autofocus=True,
-            label="Username",
             on_submit=self.handle_username_submit,
         )
 
@@ -114,6 +112,8 @@ class CRDTSignApp:
             controls=[
                 ft.CupertinoAppBar(
                     title=ft.Text("Welcome to CRDTSign"),
+                    leading=None,
+                    automatically_imply_leading=False,
                 ),
                 ft.Container(
                     content=ft.Column(
@@ -122,13 +122,23 @@ class CRDTSignApp:
                                 "Please enter a username to get started. This username will be associated with your signatures and cannot be changed later."
                             ),
                             self.username_field,
-                            ft.FilledButton(
-                                text="Register", on_click=self.handle_username_submit
+                            ft.Row(
+                                [
+                                    ft.CupertinoButton(
+                                        content=ft.Text("Register", color="#432dd7"),
+                                        on_click=self.handle_username_submit,
+                                        bgcolor="#e0e7ff",
+                                    ),
+                                ],
+                                alignment=ft.MainAxisAlignment.CENTER,
+                                expand=True,
                             ),
                         ],
+                        expand=True,
                     ),
                 ),
             ],
+            bgcolor="#f3f4f6",
         )
 
 

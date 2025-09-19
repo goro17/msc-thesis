@@ -1,9 +1,7 @@
 import flet as ft
 
-from components.card import CardStack
 from components.file_signature_card_container import FileSignatureCardContainer
-from datetime import datetime, timedelta
-from components.file_signature_card import FileSignature
+
 
 class HomeView:
     def __init__(self, page: ft.Page):
@@ -21,6 +19,7 @@ class HomeView:
                                         [
                                             ft.Text(
                                                 "Home page",
+                                                color="#3736f9",
                                                 text_align=ft.TextAlign.CENTER,
                                                 weight=ft.FontWeight.BOLD,
                                                 size=42,
@@ -28,15 +27,23 @@ class HomeView:
                                             ft.Row(
                                                 [
                                                     ft.CupertinoButton(
-                                                        content=ft.Text("Update"),
+                                                        content=ft.Text(
+                                                            "Update", color="#432dd7"
+                                                        ),
                                                         # bgcolor=ft.CupertinoColors.LIGHT_BACKGROUND_GRAY,
                                                         opacity_on_click=0.3,
                                                         on_click=lambda _: self.file_signature_card_container.update_container(),
                                                     ),
-                                                    ft.CupertinoFilledButton(
-                                                        content=ft.Text("Create new"),
+                                                    ft.CupertinoButton(
+                                                        content=ft.Text(
+                                                            "Create new",
+                                                            color="#432dd7",
+                                                        ),
                                                         opacity_on_click=0.3,
-                                                        on_click=lambda _: self.page.go("/create"),
+                                                        on_click=lambda _: self.page.go(
+                                                            "/create"
+                                                        ),
+                                                        bgcolor="#e0e7ff",
                                                     ),
                                                 ],
                                                 alignment=ft.MainAxisAlignment.SPACE_EVENLY,
@@ -59,4 +66,5 @@ class HomeView:
                     padding=10,
                 )
             ],
+            bgcolor="#f3f4f6",
         )

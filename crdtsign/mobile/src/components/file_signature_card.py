@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Optional, Callable
 
 from utils.storage import file_storage, user_storage
-from crdtsign.sign import is_verified_signature, load_keypair, load_public_key
+from crdtsign.sign import is_verified_signature, load_public_key
 
 
 @dataclass
@@ -38,7 +38,7 @@ class FileSignatureCard:
         self.expanded = False
 
         # Create the card control
-        self.card = ft.Card(content=self.build_card_content())
+        self.card = ft.Card(content=self.build_card_content(), color="#ffffff")
 
     def toggle_expand(self, e):
         self.expanded = not self.expanded
@@ -50,11 +50,13 @@ class FileSignatureCard:
             ft.CupertinoListTile(
                 notched=True,
                 title=ft.Text(self.file_name),
-                subtitle=ft.Text(f"{self.signed_by} <{self.signed_id.split('user_')[-1]}>"),
+                subtitle=ft.Text(
+                    f"{self.signed_by} <{self.signed_id.split('user_')[-1]}>"
+                ),
                 additional_info=ft.Text(
                     f"{datetime.strftime(self.signed_at, '%Y-%m-%d %H:%M:%S')}"
                 ),
-                leading=ft.Icon(ft.Icons.FILE_PRESENT),
+                leading=ft.Icon(ft.Icons.FILE_PRESENT, color="#3736f9"),
                 on_click=self.toggle_expand,
             ),
         ]
@@ -175,4 +177,3 @@ class FileSignatureCard:
                         ft.Text(f"Signature for '{self.file_name}' is NOT VALID.")
                     )
                 )
-
