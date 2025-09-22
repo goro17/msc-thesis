@@ -3,8 +3,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, Callable
 
+import arrow
+
 from utils.storage import file_storage, user_storage
 from crdtsign.sign import is_verified_signature, load_public_key
+from crdtsign.utils.data_retention import get_time_until_expiration
 
 
 @dataclass
@@ -17,6 +20,7 @@ class FileSignature:
     signed_id: str
     signed_at: datetime
     expiration_date: Optional[datetime] = None
+    data_retention_exp_date: Optional[datetime] = None
 
 
 class FileSignatureCard:
@@ -33,6 +37,7 @@ class FileSignatureCard:
         self.signed_id = file_signature.signed_id
         self.signed_at = file_signature.signed_at
         self.expiration_date = file_signature.expiration_date
+        self.data_retention_exp_date = file_signature.data_retention_exp_date
         self.delete_callback = delete_callback
         self.expand_icon = ft.Icon(ft.Icons.EXPAND_MORE)
         self.expanded = False
@@ -61,6 +66,36 @@ class FileSignatureCard:
             ),
         ]
 
+        if self.data_retention_exp_date:
+            data_retention_content = ft.Column([
+                ft.Container(height=10),
+                ft.Container(
+                    ft.Text(
+                        spans=[
+                            ft.TextSpan(
+                                "Warning: ",
+                                style=ft.TextStyle(weight=ft.FontWeight.BOLD),
+                            ),
+                            ft.TextSpan(
+                                "The assigned expiration date has been overriden by the data retention policy configured by the administrator. ",
+                            ),
+                            ft.TextSpan(
+                                "This signature will expire ",
+                            ),
+                            ft.TextSpan(
+                                f"{get_time_until_expiration(self.data_retention_exp_date.isoformat())}.",
+                                style=ft.TextStyle(weight=ft.FontWeight.BOLD),
+                            ),
+                        ]
+                    ),
+                    padding=10,
+                    bgcolor = ft.Colors.YELLOW_ACCENT_100,
+                    border_radius = ft.BorderRadius(5, 5, 5, 5),
+                ),
+            ])
+        else:
+            data_retention_content = ft.Container(height=10)
+
         if self.expanded:
             base_content.extend(
                 [
@@ -75,6 +110,7 @@ class FileSignatureCard:
                         if self.expiration_date
                         else "No expiration date"
                     ),
+                    data_retention_content,
                     ft.Row(
                         [
                             ft.CupertinoButton(
@@ -91,7 +127,6 @@ class FileSignatureCard:
                         alignment=ft.MainAxisAlignment.END,
                         expand=True,
                     ),
-                    ft.Container(height=10),  # Spacing
                 ]
             )
 

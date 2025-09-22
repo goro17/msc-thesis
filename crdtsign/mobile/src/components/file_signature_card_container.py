@@ -1,6 +1,6 @@
 import flet as ft
 from .file_signature_card import FileSignature, FileSignatureCard
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
 
 from utils.storage import file_storage
@@ -55,6 +55,7 @@ class FileSignatureCardContainer(ft.Column):
                 signed_id=signature["user_id"],
                 signed_at=datetime.fromisoformat(signature["signed_on"]).astimezone(datetime.now().tzinfo),
                 expiration_date=datetime.fromisoformat(signature["expiration_date"]).astimezone(datetime.now().tzinfo) if "expiration_date" in signature and signature["expiration_date"] else None,
+                data_retention_exp_date=datetime.fromisoformat(signature["data_retention_new_exp_date"]).astimezone(datetime.now().tzinfo) if "data_retention_new_exp_date" in signature and signature["data_retention_new_exp_date"] else None,
             )
             self.add_card(file_signature, update_page=False)
 
