@@ -226,10 +226,11 @@ wheels = [
 
 [[package]]
 name = "crdtsign-core"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "anyio" },
+    { name = "arrow" },
     { name = "click" },
     { name = "cryptography" },
     { name = "flet", extra = ["all"] },
@@ -238,6 +239,7 @@ dependencies = [
     { name = "loguru" },
     { name = "pycrdt" },
     { name = "pycrdt-websocket" },
+    { name = "pyyaml" },
     { name = "quart" },
     { name = "rich" },
     { name = "shortuuid" },
@@ -247,7 +249,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
-    { name = "ruff" },
 ]
 lint = [
     { name = "ruff" },
@@ -256,6 +257,7 @@ lint = [
 [package.metadata]
 requires-dist = [
     { name = "anyio", specifier = ">=4.9.0,<5.0.0" },
+    { name = "arrow", specifier = ">=1.3.0" },
     { name = "click", specifier = ">=8.2.1,<9.0.0" },
     { name = "cryptography", specifier = ">=44.0.3,<45.0.0" },
     { name = "flet", extras = ["all"], specifier = ">=0.28.2" },
@@ -264,6 +266,7 @@ requires-dist = [
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "pycrdt", specifier = ">=0.12.22,<0.13.0" },
     { name = "pycrdt-websocket", specifier = ">=0.16.0,<0.17.0" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "quart", specifier = ">=0.20.0" },
     { name = "rich", specifier = ">=14.0.0,<15.0.0" },
     { name = "shortuuid", specifier = ">=1.0.13,<2.0.0" },
@@ -271,10 +274,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=8.3.5,<8.4" },
-    { name = "ruff", specifier = ">=0.11.13" },
-]
+dev = [{ name = "pytest", specifier = ">=8.3.5,<8.4" }]
 lint = [{ name = "ruff", specifier = ">=0.11.9,<0.12" }]
 
 [[package]]

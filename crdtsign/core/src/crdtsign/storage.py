@@ -5,13 +5,16 @@ import os
 from datetime import datetime
 from typing import Optional
 
-from loguru import logger
 import shortuuid
 from httpx_ws import aconnect_ws
+from loguru import logger
 from pycrdt import Doc, Map, Provider
 from pycrdt.websocket.websocket import HttpxWebsocket
 from rich.console import Console
 from rich.table import Table
+
+from crdtsign.config import data_retention_config
+from crdtsign.utils.data_retention import check_data_retention
 
 
 class FileSignatureStorage:
@@ -193,6 +196,15 @@ class FileSignatureStorage:
         if expiration_date:
             file["expiration_date"] = str(expiration_date.isoformat())
 
+        flag_data_retention, data_retention_new_exp_date = check_data_retention(file)
+
+        if flag_data_retention:
+            logger.warning(
+                "The file's expiration date has been overriden by the currently assigned data retention policy."
+            )
+            file["flag_data_retention"] = True
+            file["data_retention_new_exp_date"] = data_retention_new_exp_date
+
         # Add the file to the files map
         with self.doc.transaction():
             self.files_map[file["id"]] = file
@@ -293,6 +305,49 @@ class FileSignatureStorage:
             )
 
         Console().print(table)
+
+    async def data_retention_routine(self):
+        """Check which files have already expired according to the data retention policy."""
+        signatures = self.get_signatures()
+
+        if int(data_retention_config["data_retention_period"]) == 0:
+            # Data retention is disabled
+            # Delete all residual data
+            for sig in signatures:
+                file_id = sig["id"]
+                if "flag_data_retention" in sig:
+                    del sig["flag_data_retention"]
+                    del sig["data_retention_new_exp_date"]
+                    with self.doc.transaction():
+                        self.files_map[file_id] = sig
+            self.save_signatures_to_file()
+            return
+        else:
+            # recompute a new expiration date (when data retention is re-enabled)
+            for sig in signatures:
+                file_id = sig["id"]
+                flag, new_exp_date = check_data_retention(sig)
+                if flag:
+                    sig["flag_data_retention"] = flag
+                    sig["data_retention_new_exp_date"] = new_exp_date
+                    with self.doc.transaction():
+                        self.files_map[file_id] = sig
+
+
+        for sig in signatures:
+            if "data_retention_new_exp_date" in sig:
+                if datetime.now().replace(tzinfo=datetime.now().astimezone().tzinfo) > datetime.fromisoformat(
+                    sig["data_retention_new_exp_date"]
+                ).replace(tzinfo=datetime.now().astimezone().tzinfo):
+                    logger.warning(f"File {sig['name']} marked as expired due to data retention policy.")
+                    file_id = sig["id"]
+                    sig["expiration_date"] = sig["data_retention_new_exp_date"]
+                    del sig["data_retention_new_exp_date"]
+                    if "flag_data_retention" in sig:
+                        del sig["flag_data_retention"]
+                    with self.doc.transaction():
+                        self.files_map[file_id] = sig
+        self.save_signatures_to_file()
 
 
 class UserStorage:

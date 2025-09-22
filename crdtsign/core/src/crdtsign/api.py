@@ -4,9 +4,10 @@ import hashlib
 import os
 import signal
 import tempfile
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
+import arrow
 from hypercorn import Config
 from hypercorn.asyncio import serve
 from loguru import logger
@@ -22,6 +23,7 @@ from crdtsign.sign import (
 )
 from crdtsign.storage import FileSignatureStorage, UserStorage
 from crdtsign.user import User
+from crdtsign.utils.data_retention import get_time_until_expiration
 
 # Initialize app
 app = Quart(
@@ -61,6 +63,8 @@ async def index():
     On POST, this also handles setting the username for a new user.
     """
     global user
+
+    await file_storage.data_retention_routine()
 
     # Handle username registration if submitted
     if request.method == "POST":
@@ -104,6 +108,10 @@ async def get_signature(file_id):
     signatures = file_storage.get_signatures()
     for sig in signatures:
         if sig["id"] == file_id:
+            print(sig)
+            # sig["time_to_expiration"] = get_time_until_expiration(sig["expiration_date"])
+            if "flag_data_retention" in sig:
+                sig["time_to_data_retention"] = get_time_until_expiration(sig["data_retention_new_exp_date"])
             return jsonify({"signature": sig})
     return jsonify({"error": "Signature not found"}), 404
 
@@ -231,24 +239,31 @@ async def validate_signature(file_id):
         if sig["id"] == file_id:
             # Check expiration if present
             is_expired = False
-            expiration_message = "No expiration date set"
+            if "data_retention_new_exp_date" in sig:
+                new_expiration_date = datetime.fromisoformat(sig["data_retention_new_exp_date"])
+                exp_date = arrow.get(new_expiration_date.isoformat()).to("local").format("MMMM D, YYYY (HH:mm:ss)")
+                expiration_message = f"Signature valid until {exp_date}"
+            else:
+                expiration_message = "No expiration date set"
 
             if "expiration_date" in sig:
                 # Parse the expiration date and ensure it's timezone-aware
                 expiration_date = datetime.fromisoformat(sig["expiration_date"])
-                if expiration_date.tzinfo is None:
-                    # If the date is naive, assume it's in UTC
-                    expiration_date = expiration_date.replace(tzinfo=timezone.utc)
 
-                # Get current time in UTC
-                now = datetime.now(timezone.utc)
+                now = datetime.now()
+                is_expired = now.replace(tzinfo=timezone.utc) > expiration_date.replace(tzinfo=timezone.utc)
 
-                is_expired = now > expiration_date
+                exp_date = arrow.get(expiration_date.isoformat()).to("local").format("MMMM D, YYYY (HH:mm:ss)")
 
                 if is_expired:
-                    expiration_message = f"Signature expired on {expiration_date.isoformat()}"
+                    expiration_message = f"Signature expired on {exp_date}"
                 else:
-                    expiration_message = f"Signature valid until {expiration_date.isoformat()}"
+                    if "data_retention_new_exp_date" in sig:
+                        new_expiration_date = datetime.fromisoformat(sig["data_retention_new_exp_date"])
+                        exp_date = arrow.get(
+                            new_expiration_date.isoformat()
+                        ).to("local").format("MMMM D, YYYY (HH:mm:ss)")
+                    expiration_message = f"Signature valid until {exp_date}"
 
             # Ensure the signature object has the proper ISO format date with timezone
             if "expiration_date" in sig:
@@ -297,18 +312,20 @@ async def run_app(host: str, port: int):
     await file_storage.connect()
     await user_storage.connect()
 
+    await file_storage.data_retention_routine()
+
     # Set up graceful shutdown handler
     shutdown_event = False
-    
+
     def handle_shutdown(sig, frame):
         nonlocal shutdown_event
         logger.info("Shutdown signal received, cleaning up...")
         shutdown_event = True
-    
+
     # Register signal handlers for graceful shutdown
     signal.signal(signal.SIGINT, handle_shutdown)
     signal.signal(signal.SIGTERM, handle_shutdown)
-    
+
     config = Config()
     config.bind = [f"{host}:{port}"]
     try:
@@ -322,10 +339,10 @@ async def run_app(host: str, port: int):
             await file_storage.disconnect()
         except Exception as e:
             logger.error(f"Error disconnecting file storage: {e}")
-        
+
         try:
             await user_storage.disconnect()
         except Exception as e:
             logger.error(f"Error disconnecting user storage: {e}")
-        
+
         logger.info("Shutdown complete.")

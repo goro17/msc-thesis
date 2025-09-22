@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up modal close buttons
     document.getElementById('close-modal').addEventListener('click', closeDetailsModal);
-    document.getElementById('close-modal-btn').addEventListener('click', closeDetailsModal);
     document.getElementById('close-delete-modal').addEventListener('click', closeDeleteModal);
     document.getElementById('cancel-delete-btn').addEventListener('click', closeDeleteModal);
     
@@ -330,7 +329,7 @@ async function validateSignature(signatureId) {
 }
 
 // Show signature details in modal
-function showSignatureDetails(signature, validationMessage, isValid) {
+function showSignatureDetails(signature) {
     document.getElementById('modal-file-name').textContent = signature.name;
     document.getElementById('modal-file-hash').textContent = signature.hash;
     document.getElementById('modal-signature').textContent = signature.signature;
@@ -355,15 +354,13 @@ function showSignatureDetails(signature, validationMessage, isValid) {
     // Show validation status
     const validationContainer = document.getElementById('modal-validation-status-container');
     const validationStatus = document.getElementById('modal-validation-status');
-    
-    // validationContainer.classList.remove('hidden');
-    validationStatus.textContent = validationMessage;
-    validationStatus.className = 'mt-1 text-sm font-medium';
-    
-    if (isValid) {
-        validationStatus.classList.add('text-green-600');
-    } else {
-        validationStatus.classList.add('text-red-600');
+
+    const dataRetentionWarningContainer = document.getElementById('modal-data-retention-warning-container')
+    if (signature.flag_data_retention) {
+        const dataRetentionWarningText = document.getElementById('modal-data-retention-warning-text')
+        dataRetentionWarningText.innerHTML = "Warning: The assigned expiration date has been overriden by the data retention policy configured by the administrator.";
+        dataRetentionWarningText.innerHTML += ` This signature will expire <strong>${signature.time_to_data_retention}</strong>.`;
+        dataRetentionWarningContainer.classList.remove('hidden');
     }
     
     // Show the modal

@@ -34,6 +34,8 @@ services:
     environment:
       - PYTHONBUFFERED=1
       - IS_CONTAINER=true
+    volumes:
+      - /etc/localtime:/etc/localtime
 
   client-2:
     build:
@@ -51,6 +53,8 @@ services:
     environment:
       - PYTHONBUFFERED=1
       - IS_CONTAINER=true
+    volumes:
+      - /etc/localtime:/etc/localtime
 
   client-3:
     build:
@@ -68,6 +72,8 @@ services:
     environment:
       - PYTHONBUFFERED=1
       - IS_CONTAINER=true
+    volumes:
+      - /etc/localtime:/etc/localtime
 
 networks:
   crdtsign-network:
