@@ -35,7 +35,7 @@ class CRDTSignApp:
         """App startup"""
         self.page = page
         self.page.title = "crdtSign"
-        self.page.theme_mode = ft.ThemeMode.SYSTEM
+        self.page.theme_mode = ft.ThemeMode.LIGHT
         self.page.padding = 0
         self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
         self.page.scroll = ft.ScrollMode.ALWAYS

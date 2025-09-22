@@ -9,6 +9,7 @@ authors = [
 ]
 dependencies = [
   "arrow>=1.3.0",
+  "crdtsign-core",
   "flet[all]==0.28.2",
 ]
 
@@ -42,3 +43,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[tool.uv.sources]
+crdtsign-core = { path = "../core" }
