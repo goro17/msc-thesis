@@ -51,7 +51,7 @@ class HomeView:
                                             ),
                                             ft.Container(
                                                 content=self.file_signature_card_container,
-                                                height=self.page.window.height - 200,
+                                                height=self.page.window.height - 400,
                                                 expand=False,
                                             ),
                                         ]
@@ -64,7 +64,8 @@ class HomeView:
                         expand=True,
                     ),
                     padding=10,
-                )
+                ),
+                ft.Container(height=100)
             ],
             bgcolor="#f3f4f6",
         )
