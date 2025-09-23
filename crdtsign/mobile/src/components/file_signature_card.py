@@ -197,7 +197,9 @@ class FileSignatureCard:
                         ft.Text(
                             f"Signature for '{self.file_name}' is VALID."
                             + (
-                                f" Signature is valid until {datetime.strftime(self.expiration_date, '%Y-%m-%d %H:%M:%S')}."
+                                f" Signature is valid until {arrow.get(self.data_retention_exp_date).format('MMMM D, YYYY (HH:mm:ss)')}."
+                                if self.data_retention_exp_date
+                                else f" Signature is valid until {arrow.get(self.expiration_date).format('MMMM D, YYYY (HH:mm:ss)')}."
                                 if self.expiration_date
                                 else " No expiration date set."
                             ),

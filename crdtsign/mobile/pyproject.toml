@@ -10,7 +10,7 @@ authors = [
 dependencies = [
   "arrow>=1.3.0",
   "crdtsign-core",
-  "flet[all]==0.28.2",
+  "flet==0.28.3",
 ]
 
 [tool.flet]
