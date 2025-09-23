@@ -178,7 +178,7 @@ class FileSignatureCard:
             e.page.open(
                 ft.SnackBar(
                     ft.Text(
-                        f"Signature for '{self.file_name}' has EXPIRED ({datetime.strftime(self.expiration_date, '%Y-%m-%d %H:%M:%S')}).",
+                        f"Signature for '{self.file_name}' has EXPIRED on {arrow.get(self.expiration_date).format('MMMM D, YYYY (HH:mm:ss)')}.",
                         color="#531b15",
                     ),
                     bgcolor="#e3b7b4",

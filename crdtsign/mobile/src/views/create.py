@@ -61,8 +61,8 @@ class CreateView:
                                         ft.Text("Select a file to sign", size=16),
                                         ft.FilledButton(
                                             "Pick file",
-                                            color="#432dd7",
-                                            bgcolor="#e0e7ff",
+                                            color=ft.Colors.WHITE,
+                                            bgcolor="#432dd7",
                                             icon=ft.Icons.UPLOAD_FILE,
                                             on_click=lambda _: self.pick_files_dialog.pick_files(
                                                 allow_multiple=False
@@ -89,10 +89,10 @@ class CreateView:
                                 ),
                                 ft.Row(
                                     [
-                                        ft.FilledButton(
+                                        ft.CupertinoButton(
                                             "Set expiration date/time",
                                             color="#432dd7",
-                                            adaptive=True,
+                                            #adaptive=True,
                                             on_click=lambda e: self.page.open(
                                                 ft.CupertinoBottomSheet(
                                                     content=self.expiration_date_picker,
