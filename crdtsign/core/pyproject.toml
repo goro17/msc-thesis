@@ -30,7 +30,8 @@ crdtsign-app = "crdtsign.scripts.app:app"
 
 [dependency-groups]
 dev = [
-    "pytest >=8.3.5, <8.4"
+    "isort>=7.0.0",
+    "pytest >=8.3.5, <8.4",
 ]
 lint = [
     "ruff >=0.11.9, <0.12"
