@@ -11,14 +11,14 @@
 <body class="bg-gray-100 min-h-screen">
     <!-- Notification Container -->
     <div id="notification-container"></div>
-    
+
     {% if show_username_form %}
     <!-- Username Registration Modal -->
     <div class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg p-8 max-w-md w-full">
             <h2 class="text-xl font-semibold mb-4">Welcome to CRDTSign!</h2>
             <p class="mb-4">Please enter a username to get started. This username will be associated with your signatures and cannot be changed later.</p>
-            
+
             <form method="POST" action="/" class="space-y-4">
                 <div>
                     <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
@@ -45,11 +45,11 @@
         <!-- Tab Navigation -->
         <div class="flex justify-center mb-6">
             <nav class="flex space-x-4" aria-label="Tabs">
-                <button class="tab-button px-4 py-2 text-sm font-medium rounded-md bg-indigo-100 text-indigo-700" 
+                <button id="signatures-tab-btn" class="tab-button px-4 py-2 text-sm font-medium rounded-md bg-indigo-100 text-indigo-700"
                         data-tab="signatures">Signatures</button>
-                <button class="tab-button px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700" 
+                <button class="tab-button px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700"
                         data-tab="sign">Sign File</button>
-                <button class="tab-button px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700" 
+                <button class="tab-button px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700"
                         data-tab="verify">Verify Signature</button>
             </nav>
         </div>
@@ -155,11 +155,18 @@
             <div class="px-6 py-4 bg-indigo-600">
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-medium text-white">Signature Details</h3>
-                    <button id="close-modal" class="text-white hover:text-gray-200 focus:outline-none">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                    <div class="flex items-center space-x-4">
+                        <button id="download-btn" class="text-white hover:text-gray-200 focus:outline-none" title="Download">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                        </button>
+                        <button id="close-modal" class="text-white hover:text-gray-200 focus:outline-none" title="Close">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="px-6 py-4 max-h-[70vh] overflow-y-auto">
@@ -212,7 +219,7 @@
             </div> -->
         </div>
     </div>
-    
+
     <!-- Delete Confirmation Modal -->
     <div id="delete-confirmation-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center hidden z-50">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden">

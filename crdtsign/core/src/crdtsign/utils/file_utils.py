@@ -22,7 +22,7 @@ def serialize_file(file_path: os.PathLike, chunk_size: Optional[int] = CHUNK_SIZ
                     break
 
                 chunk = lz4.frame.compress(chunk)
-                serialized_file.append(chunk)
+                serialized_file.append(chunk.hex())
 
         logger.info("File serialization complete.")
         return serialized_file
@@ -44,7 +44,7 @@ def deserialize_file(
     try:
         with open(to_file, "wb") as f:
             for chunk in input_file:
-                f.write(lz4.frame.decompress(chunk))
+                f.write(lz4.frame.decompress(bytes.fromhex(chunk)))
         logger.info(f"File successfully deserialized as '{to_file}'.")
 
         if check_hash:

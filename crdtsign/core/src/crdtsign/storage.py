@@ -3,7 +3,8 @@
 import logging
 import os
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
+from typing import List, Optional
 
 import shortuuid
 from httpx_ws import aconnect_ws
@@ -15,6 +16,7 @@ from rich.table import Table
 
 from crdtsign.config import data_retention_config
 from crdtsign.utils.data_retention import check_data_retention
+from crdtsign.utils.file_utils import deserialize_file, serialize_file
 
 
 class FileSignatureStorage:
@@ -63,7 +65,6 @@ class FileSignatureStorage:
         """Create a websocket provider for connecting to the server."""
         doc = Doc() if doc is None else doc
 
-
         self._websocket = None
         self._provider = None
         self._connection_task = None
@@ -93,7 +94,7 @@ class FileSignatureStorage:
         import asyncio
 
         # Clean up contexts in reverse order
-        if hasattr(self, '_contexts'):
+        if hasattr(self, "_contexts"):
             for context in reversed(self._contexts):
                 try:
                     await context.__aexit__(None, None, None)
@@ -156,6 +157,19 @@ class FileSignatureStorage:
         """Handle changes to the shared map."""
         logger.info(f"[{self.room_name}] Client {self.client_id} detected change: {event}")
 
+    async def handle_files_deserialization(self):
+        """Handle batch deserialization for files embedded in the CRDT."""
+        for file in self.get_signatures():
+            if "file_content" in file:
+                logger.info("Found embedded file. Deserialization in progress...")
+                target_file_path = Path(".storage/uploads") / file["user_id"]
+                os.makedirs(target_file_path, exist_ok=True)
+                deserialize_file(file["file_content"], target_file_path / file["name"], file["hash"])
+
+            del self.files_map[file["id"]]["file_content"]
+
+        self.save_signatures_to_file()
+
     async def add_file_signature(
         self,
         file_name: str,
@@ -190,6 +204,7 @@ class FileSignatureStorage:
             "user_id": user_id,
             "username": display_name,
             "signed_on": str(signed_on.isoformat()),
+            "file_content": serialize_file(Path(".storage/uploads") / user_id / file_name),
         }
 
         # Add expiration date if provided
@@ -208,6 +223,9 @@ class FileSignatureStorage:
         # Add the file to the files map
         with self.doc.transaction():
             self.files_map[file["id"]] = file
+
+        # Saving file chunks on the file owner's storage is redundant
+        # del self.files_map[file["id"]]["file_content"]
 
         if persist:
             self.save_signatures_to_file()
@@ -228,7 +246,7 @@ class FileSignatureStorage:
         if persist:
             self.save_signatures_to_file()
 
-    def get_signatures(self) -> list:
+    def get_signatures(self) -> List[dict]:
         """Retrieve all file signatures stored in the document.
 
         Converts the CRDT data structures into standard Python dictionaries for easier
@@ -333,7 +351,6 @@ class FileSignatureStorage:
                     with self.doc.transaction():
                         self.files_map[file_id] = sig
 
-
         for sig in signatures:
             if "data_retention_new_exp_date" in sig:
                 if datetime.now().replace(tzinfo=datetime.now().astimezone().tzinfo) > datetime.fromisoformat(
@@ -425,7 +442,7 @@ class UserStorage:
         import asyncio
 
         # Clean up contexts in reverse order
-        if hasattr(self, '_contexts'):
+        if hasattr(self, "_contexts"):
             for context in reversed(self._contexts):
                 try:
                     await context.__aexit__(None, None, None)

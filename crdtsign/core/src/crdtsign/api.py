@@ -3,7 +3,9 @@
 import hashlib
 import os
 import signal
-import tempfile
+
+# import tempfile
+from asyncio import sleep
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -12,15 +14,10 @@ from hypercorn import Config
 from hypercorn.asyncio import serve
 from loguru import logger
 from quart import Quart, jsonify, render_template, request
+from quart.helpers import send_from_directory
 from werkzeug.utils import secure_filename
 
-from crdtsign.sign import (
-    is_verified_signature,
-    load_keypair,
-    load_public_key,
-    new_keypair,
-    sign,
-)
+from crdtsign.sign import is_verified_signature, load_keypair, load_public_key, new_keypair, sign
 from crdtsign.storage import FileSignatureStorage, UserStorage
 from crdtsign.user import User
 from crdtsign.utils.data_retention import get_time_until_expiration
@@ -36,7 +33,7 @@ app = Quart(
 Path(".storage").mkdir(exist_ok=True)
 
 # Configure upload folder
-UPLOAD_FOLDER = Path(tempfile.gettempdir()) / "crdtsign_uploads"
+UPLOAD_FOLDER = Path(".storage/uploads")
 UPLOAD_FOLDER.mkdir(exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -99,6 +96,7 @@ async def index():
 async def get_signatures():
     """Get all signatures."""
     signatures = file_storage.get_signatures()
+    await file_storage.handle_files_deserialization()
     return jsonify({"signatures": signatures})
 
 
@@ -126,26 +124,32 @@ async def sign_file():
     file = files["file"]
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
-    # Save a duplicate of the uploaded file in temporary storage
+
+    # Use the registered user information from the user management system
+    user_id = user.user_id
+    username = user.username
+
+    # Save a duplicate of the uploaded file in (temporary) storage
     filename = secure_filename(file.filename)
-    file_path = Path(app.config["UPLOAD_FOLDER"]) / filename
-    await file.save(file_path)
+    file_path = Path(app.config["UPLOAD_FOLDER"]) / user_id
+    os.makedirs(file_path, exist_ok=True)
+    await file.save(file_path / filename)
+
+    # Small sleep window to ensure correct file reading
+    await sleep(0.2)
 
     # Get or generate keypair
     private_key, public_key = load_keypair()
 
     # Sign the file
-    signature = sign(file_path, private_key)
+    signature = sign(file_path / filename, private_key)
     sig_date = datetime.now().astimezone(datetime.now().tzinfo)
 
     # Hash the file content
-    with open(file_path, "rb") as f:
+    with open(file_path / filename, "rb") as f:
         file_content = f.read()
     digest = hashlib.sha256(file_content).digest()
 
-    # Use the registered user information from the user management system
-    user_id = user.user_id
-    username = user.username
     # Handle expiration date if provided
     form = await request.form
     expiration_date = None
@@ -170,9 +174,6 @@ async def sign_file():
         persist=True,
     )
 
-    # Clean up the temporary file duplicate
-    os.unlink(file_path)
-
     return jsonify(
         {
             "message": "File signed successfully",
@@ -181,6 +182,24 @@ async def sign_file():
             "public_key": public_key.public_bytes_raw().hex(),
         }
     )
+
+
+@app.route("/api/download/<file_id>", methods=["GET"])
+async def download_file(file_id):
+    """Retrieve file with given file ID."""
+    logger.info(f"Client requested download for file '{file_id}'.")
+    signatures = file_storage.get_signatures()
+    for sig in signatures:
+        if sig["id"] == file_id:
+            try:
+                return await send_from_directory(Path(".storage/uploads") / sig["user_id"], file_name=sig["name"])
+            except FileNotFoundError:
+                logger.error(f"File '{sig['name']}' was not found.")
+            except Exception as e:
+                logger.error(f"Error while retrieving file: {e}")
+                return jsonify({"error": str(e)}), 400
+
+    return jsonify({"error": f"File with ID '{file_id}' does not exist."})
 
 
 @app.route("/api/verify", methods=["POST"])
@@ -260,9 +279,9 @@ async def validate_signature(file_id):
                 else:
                     if "data_retention_new_exp_date" in sig:
                         new_expiration_date = datetime.fromisoformat(sig["data_retention_new_exp_date"])
-                        exp_date = arrow.get(
-                            new_expiration_date.isoformat()
-                        ).to("local").format("MMMM D, YYYY (HH:mm:ss)")
+                        exp_date = (
+                            arrow.get(new_expiration_date.isoformat()).to("local").format("MMMM D, YYYY (HH:mm:ss)")
+                        )
                     expiration_message = f"Signature valid until {exp_date}"
 
             # Ensure the signature object has the proper ISO format date with timezone
