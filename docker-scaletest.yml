@@ -1,0 +1,60 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8765:8765
+    container_name: crdtsign-server
+    networks:
+      - crdtsign-network
+    command: uv run crdtsign server --host 0.0.0.0 --port 8765
+    environment:
+      - PYTHONBUFFERED=1
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.settimeout(1); s.connect(('localhost', 8765)); s.close()"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+
+  scale-reader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # container_name: scale-reader
+    networks:
+      - crdtsign-network
+    depends_on:
+      server:
+        condition: service_healthy
+    command: uv run test-scalereader
+    environment:
+      - PYTHONBUFFERED=1
+      - IS_CONTAINER=true
+    volumes:
+      - /etc/localtime:/etc/localtime
+      - ./crdtsign/core/tests/artifacts:/app/tests/artifacts
+
+  scale-writer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scale-writer
+    networks:
+      - crdtsign-network
+    depends_on:
+      server:
+        condition: service_healthy
+    command: uv run test-scalewriter
+    environment:
+      - PYTHONBUFFERED=1
+      - IS_CONTAINER=true
+    volumes:
+      - /etc/localtime:/etc/localtime
+      - ./crdtsign/core/tests/artifacts:/app/tests/artifacts
+
+networks:
+  crdtsign-network:
+    driver: bridge

@@ -1,7 +1,5 @@
 """Sync server implementation."""
-import logging
 from datetime import datetime
-import os
 from pathlib import Path
 
 from hypercorn import Config

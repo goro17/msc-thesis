@@ -1,5 +1,6 @@
 """Functions to deal with storage of signatures and user keys."""
 
+import asyncio
 import logging
 import os
 from datetime import datetime
@@ -155,7 +156,16 @@ class FileSignatureStorage:
 
     def _on_map_change(self, event):
         """Handle changes to the shared map."""
-        logger.info(f"[{self.room_name}] Client {self.client_id} detected change")
+        logger.info(
+            f"[{self.room_name}] Client {self.client_id} detected change."
+        )
+        asyncio.create_task(self._deferred_save_signatures())
+
+    async def _deferred_save_signatures(self):
+        """Deferred save operation to run outside observer callback context."""
+        # Small delay to ensure we're outside the transaction context
+        await asyncio.sleep(0)
+        self.save_signatures_to_file()
 
     async def handle_files_deserialization(self):
         """Handle batch deserialization for files embedded in the CRDT."""
@@ -193,6 +203,8 @@ class FileSignatureStorage:
             signed_on: Timestamp of when the signature was created
             expiration_date: Optional expiration date for the signature
             persist: True if the update should trigger a save of the state on file, False otherwise
+            serialized_file_path: override the path where to pick up the file to
+                                  serialize, keep the default one if None
         """
         # Use provided username or fall back to user_id if not provided
         display_name = username if username else user_id
@@ -266,6 +278,7 @@ class FileSignatureStorage:
 
         return signatures
 
+
     def save_signatures_to_file(self) -> None:
         """Save the file signatures to a persistent storage file.
 
@@ -283,7 +296,7 @@ class FileSignatureStorage:
         with open(".storage/signatures.bin", "wb") as f:
             f.write(doc_updates)
 
-        print("\nSignatures saved to file.\n")
+        # print("\nSignatures saved to file.\n")
 
     def load_signatures_from_file(self) -> None:
         """Load signature data from persistent storage into the current document.
@@ -302,7 +315,7 @@ class FileSignatureStorage:
 
         # Apply the update to the current document
         self.doc.apply_update(doc_updates)
-        print("\nSignatures loaded from file.\n")
+        # print("\nSignatures loaded from file.\n")
 
     def get_signatures_table(self) -> None:
         """Get all file signatures stored in the document as a formatted table."""
@@ -508,7 +521,16 @@ class UserStorage:
 
     def _on_map_change(self, event):
         """Handle changes to the shared map."""
-        logger.info(f"[{self.room_name}] Client {self.client_id} detected change: {event}")
+        logger.info(
+            f"[{self.room_name}] Client {self.client_id} detected change."
+        )
+        asyncio.create_task(self._deferred_save_users())
+
+    async def _deferred_save_users(self):
+        """Deferred save operation to run outside observer callback context."""
+        # Small delay to ensure we're outside the transaction context
+        await asyncio.sleep(0)
+        self.save_users_to_file()
 
     def add_user(
         self,
@@ -564,7 +586,7 @@ class UserStorage:
         with open(".storage/users.bin", "wb") as f:
             f.write(doc_updates)
 
-        print("\nUsers data saved to file.\n")
+        # print("\nUsers data saved to file.\n")
 
     def load_users_from_file(self) -> None:
         """Load user data from persistent storage into the current document.
@@ -583,7 +605,7 @@ class UserStorage:
 
         # Apply the update to the current document
         self.doc.apply_update(doc_updates)
-        print("\nUsers data loaded from file.\n")
+        # print("\nUsers data loaded from file.\n")
 
     def get_users(self) -> list:
         """Retrieve all user data stored in the document.

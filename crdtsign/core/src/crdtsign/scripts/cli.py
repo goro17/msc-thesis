@@ -19,8 +19,6 @@ from crdtsign.sign import (
 from crdtsign.storage import FileSignatureStorage
 from crdtsign.user import User
 
-from . import scalability_test
-
 
 @click.group()
 def cli():

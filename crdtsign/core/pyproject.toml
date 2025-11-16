@@ -29,9 +29,11 @@ dependencies = [
 crdtsign = "crdtsign.scripts.cli:cli"
 crdtsign-app = "crdtsign.scripts.app:app"
 test-scalewriter = "crdtsign.scripts.scalability_test:run_scale_write"
+test-scalereader = "crdtsign.scripts.scalability_test:run_scale_read"
 
 [dependency-groups]
 dev = [
+    "ipykernel>=7.1.0",
     "isort>=7.0.0",
     "pytest >=8.3.5, <8.4",
 ]
