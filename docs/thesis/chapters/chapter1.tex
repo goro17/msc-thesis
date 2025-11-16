@@ -1,29 +1,88 @@
 \chapter{Introduction}
 
-Modern distributed systems often leverage the potential of serving replicated data at multiple geographic
-locations to guarantee low latency and high availability. A highly desirable property in systems tailored for this
-purpose is that the data should remain consistent across replicas; such a constraint dictates that the replicas
-must eventually converge to the same state. However, achieving consistency in highly available distributed systems
-poses a significant challenge, particularly when network outages may occur or when systems must operate without
-centralized coordination. 
+The modern computing landscape has moved towards building distributed systems as a means
+to fulfill the necessity of delivering high volumes of data to a continuously growing
+number of users over the Internet. It has become commonplace to have systems span over a
+network (cluster) of machines -- or \textit{nodes} -- which communicate with each other
+in a coordinated fashion. Compared to monolithic systems that assign the entire workload
+to a single machine, this approach efficiently addresses three fundamental properties
+that the majority of modern systems seeks to achieve.
 
-There are several methods for achieving consistency in highly available systems. One prominent approach is the use
-of Conflict-free Replicated Data Types (CRDTs). CRDTs are specialized data structures that can be replicated across
-multiple nodes, and are capable of ensuring that the replicas eventually converge to a consistent state without
-requiring explicit coordination from a central authority. Their decentralized nature enabled each node of the
-network to operate independently from others, making CRDTs particularly well-suited for scenarios where network
-connectivity is unreliable.
+\begin{itemize}
+	\item \textit{Scalability}: the system's ability to adapt to the scale of the
+		workload by either allocating a larger quantity of resources on one node --
+		\textit{vertical scaling} -- or dividing it among different nodes --
+		\textit{horizontal scaling};
+	\item \textit{Resiliency}: the system's ability to tolerate eventual faults that may
+		affect the correct operation of one or more nodes;
+	\item \textit{Efficiency}: the system's responsiveness expressed in terms of time and space
+		\footnote{An ideal system operates under low latency and high throughput}.
+\end{itemize}
 
-Given their nature, CRDTs have been implemented in a wide range of decentralized applications, such as
-collaborative editing tools and distributed databases. Local-first software --- an approach to application
-development that prioritizes local data storage and processing --- represents another field where CRDTs have shown
-particular effectiveness, as they enable applications to operate seamlessly offline while synchronizing changes
-over the network, sharing updates with other peers as they come.
+Advancements in this field sought to optimally achieve these pivotal demands have led to
+the emergence of more advanced paradigms, such as \textit{cloud computing}, which poses
+itself as a model that enables ubiquitous, on-demand access to a shared pool of
+configurable computing resources -- networks, servers, storage, services -- provisioned
+with minimal management effort\cite{hamdaqa2012cc}. The advent of cloud computing has
+fueled an increasing interest in applications that are built to empower collaborative
+tasks. Platforms like Google Drive\footnote{\URL{https://drive.google.com}}, Microsoft
+OneDrive\footnote{\URL{https://onedrive.live.com}}, and
+Dropbox\footnote{\URL{https://dropbox.com}} enable groups of two or more users to engage
+in common tasks by sharing access to a set of resources -- documents, spreadsheets,
+presentations, images, ... -- from anywhere in the world, in real
+time\cite{ellis1989groupware}.
 
-This thesis investigates the practical implementation of CRDTs within local-first software architectures through the
-development of a digital signature management application --- named \textit{CRDTSign}. The application leverages CRDTs
-to manage a digital signature store that is shared among multiple nodes of a distributed network, and focuses on
-maintaining consistency across the nodes. Built using the Python programming language, the application makes use of a
-Python port of the popular \textit{Yjs}\footnote{\url{https://docs.yjs.dev/}} library to build custom CRDT-based data
-structures. Through this case study, we will evaluate the effectiveness of CRDTs within the design of robust and
-conflict-free distributed systems.
+Within collaborative applications lies the challenge of making sure that concurrent
+updates are applied seamlessly and without conflicts, especially in situations where
+users may be working across different geographical locations with varying network
+latencies. Despite the risk of network connectivity being intermittent, users expect
+their collaborative experience to be responsive, their changes to be preserved, and
+conflicts to be resolved seamlessly without loss of data. Traditional approaches to
+this challenge, like the one adopted by Google Drive, heavily rely on centralized
+conflict resolution strategies such as \textit{Operational Transformation} (OT), where a
+single node acts as the authoritative source of truth and mediates all concurrent
+changes\cite{sun1998ot}. While this mechanism has proven to be reliable, a compelling
+alternative could be achieved by employing a truly decentralized, peer-to-peer (P2P)
+network, over which data is replicated across multiple nodes and concurrent changes are
+handled without the need of a centralized authority.
+
+Conflict-free Replicated Data Types (CRDTs) offer a powerful solution suitable to support
+highly available file sharing and collaborative systems. CRDTs are data structures that
+allow the system to update any replica independently and concurrently, without
+coordinating with other replicas\cite{almeida2024crdts}. The core benefit is that the
+data type itself contains an algorithm that automatically resolves any inconsistencies,
+guaranteeing that replicas will eventually converge to an identical state, even in the
+case in which a node may receive updates out of order.
+
+The formalized problem addressed by this thesis is the design and implementation of a
+Proof-of-Concept (PoC) replicated file storage solution that leverages CRDTs to
+synchronize file contents and metadata. The system is conceptualized as a P2P network
+where each participating node maintains a local replica of the storage system. All
+changes made on any node are propagated to other nodes and merged automatically using
+CRDT algorithms. For the PoC, the complexities of a true P2P network are abstracted away
+by using a relay server. This server acts as a message broker, broadcasting updates from
+one node to all other connected nodes, thereby simulating the propagation of changes in a
+P2P environment. The core of the system is built using the
+\textit{PyCRDT library}\footnote{\URL{https://github.com/y-crdt/pycrdt}}, a Python
+binding for the high-performance \textit{Yjs}\footnote{\URL{https://yjs.dev/}} CRDT
+framework. This allows for the use of mature and well-tested CRDT implementations to
+model the file system's directory structure, file contents, and metadata. The system
+is complemented by a simple web-based client that provides a user interface for
+seamless file management, where users can upload their files and enforce a robust data
+integrity guarantee by attaching a synthetic digital signature to each file. Other users
+can validate such signatures through an offline-first validation mechanism, using the
+data that was received through CRDTs.
+
+The rest of this thesis is structured as follows:
+\begin{itemize}
+	\item In \textbf{Chapter 2}, we provide a comprehensive overview of the foundational
+		concepts of CRDTs, along with their taxonomy, core data structures, and conflict
+		resolution strategies.
+	\item In \textbf{Chapter 3}, we analyze existing CRDT implementations and frameworks,
+		with a particular focus on the Yjs ecosystem, which forms the basis of the PoC.
+	\item In \textbf{Chapter 4}, we delve into the design and implementation process a
+		functioning PoC that demonstrates the feasibility of using CRDTs for file
+		synchronization in a simulated P2P environment.
+	\item In \textbf{Chapter 5}, we evaluate the PoC's performance, identify its
+		strengths and limitations, and propose directions for future work.
+\end{itemize}
