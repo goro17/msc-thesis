@@ -155,7 +155,7 @@ class FileSignatureStorage:
 
     def _on_map_change(self, event):
         """Handle changes to the shared map."""
-        logger.info(f"[{self.room_name}] Client {self.client_id} detected change: {event}")
+        logger.info(f"[{self.room_name}] Client {self.client_id} detected change")
 
     async def handle_files_deserialization(self):
         """Handle batch deserialization for files embedded in the CRDT."""
@@ -180,6 +180,7 @@ class FileSignatureStorage:
         signed_on: datetime,
         expiration_date: Optional[datetime] = None,
         persist: Optional[bool] = False,
+        serialized_file_path: Optional[os.PathLike] = None,
     ) -> None:
         """Add a file signature to the storage.
 
@@ -196,6 +197,10 @@ class FileSignatureStorage:
         # Use provided username or fall back to user_id if not provided
         display_name = username if username else user_id
 
+        path_for_file_to_serialize = (
+            (Path(".storage/uploads") / user_id / file_name) if serialized_file_path is None else serialized_file_path
+        )
+
         file = {
             "id": shortuuid.uuid(),
             "name": file_name,
@@ -204,7 +209,7 @@ class FileSignatureStorage:
             "user_id": user_id,
             "username": display_name,
             "signed_on": str(signed_on.isoformat()),
-            "file_content": serialize_file(Path(".storage/uploads") / user_id / file_name),
+            "file_content": serialize_file(path_for_file_to_serialize),
         }
 
         # Add expiration date if provided

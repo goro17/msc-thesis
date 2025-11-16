@@ -19,6 +19,8 @@ from crdtsign.sign import (
 from crdtsign.storage import FileSignatureStorage
 from crdtsign.user import User
 
+from . import scalability_test
+
 
 @click.group()
 def cli():
@@ -27,6 +29,7 @@ def cli():
     This tool allows you to sign files, verify signatures, and manage your signature storage.
     """
     pass
+
 
 # CLI SIGN / VERIFY COMMANDS
 @cli.command("sign")
@@ -126,6 +129,7 @@ def sign_command(file: Path, verify: bool, table: bool):
 
     return
 
+
 # SERVER COMMAND
 # async def _run_server(host: str, port: int) -> None:
 #     """Run the sync server."""
@@ -135,6 +139,7 @@ def sign_command(file: Path, verify: bool, table: bool):
 #     config.bind = [f"{host}:{port}"]
 #     async with websocket_server:
 #         await serve(app, config, mode="asgi")
+
 
 @cli.command("server")
 @click.option(
@@ -180,6 +185,7 @@ def app_command(host, port):
 
     click.echo(f"\nStarting crdtsign web server at http://{host}:{port}\n")
     anyio.run(run_app, host, port)
+
 
 if __name__ == "__main__":
     cli()

@@ -1,13 +1,16 @@
 """User management functionality for crdtsign."""
 
 import json
-import logging
 import os
 import random
 import string
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+from loguru import logger
+
+logger = logger.opt(colors=True)
 
 
 class User:
@@ -55,7 +58,7 @@ class User:
             self.username = username
             self.registration_date = datetime.now()
             self._save_to_file()
-            logging.info(f"Created new user with ID: {self.user_id} and username: {username}")
+            logger.info(f"Created new user with ID: {self.user_id} and username: {username}")
 
     def _generate_user_id(self) -> str:
         """Generate a unique user ID.
@@ -87,13 +90,10 @@ class User:
         with open(file_path, "w") as f:
             json.dump(user_data, f, indent=2)
 
-        logging.info(f"User information saved to {file_path}")
+        logger.info(f"User information saved to {file_path}")
 
     def _load_from_file(self) -> Optional[dict]:
         """Internal method to load user information from file.
-
-        First tries to load from the new JSON format in .storage/cache/.
-        If not found, attempts to load from the legacy format (.storage/user.bin).
 
         Returns:
             dict: User data dictionary if user file exists, None otherwise.
@@ -124,4 +124,4 @@ class User:
         """Register the connected user with the given username."""
         self.username = username
         self._save_to_file()
-        logging.info(f"{self.user_id} successfully registered as '{self.username}'")
+        logger.info(f"User <cyan>{self.user_id.split('_')[-1]}</cyan> registered as <green>{self.username}</green>.")

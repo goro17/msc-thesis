@@ -17,7 +17,7 @@ from quart import Quart, jsonify, render_template, request
 from quart.helpers import send_from_directory
 from werkzeug.utils import secure_filename
 
-from crdtsign.sign import is_verified_signature, load_keypair, load_public_key, new_keypair, sign
+from crdtsign.sign import get_file_hash, is_verified_signature, load_keypair, load_public_key, new_keypair, sign
 from crdtsign.storage import FileSignatureStorage, UserStorage
 from crdtsign.user import User
 from crdtsign.utils.data_retention import get_time_until_expiration
@@ -146,10 +146,7 @@ async def sign_file():
     sig_date = datetime.now().astimezone(datetime.now().tzinfo)
 
     # Hash the file content
-    with open(file_path / filename, "rb") as f:
-        file_content = f.read()
-    digest = hashlib.sha256(file_content).digest()
-
+    file_hash = get_file_hash(file_path / filename)
     # Handle expiration date if provided
     form = await request.form
     expiration_date = None
@@ -165,7 +162,7 @@ async def sign_file():
 
     await file_storage.add_file_signature(
         file_name=filename,
-        file_hash=digest.hex(),
+        file_hash=file_hash,
         signature=signature.hex(),
         user_id=user_id,
         username=username,

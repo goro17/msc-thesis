@@ -28,6 +28,7 @@ dependencies = [
 [project.scripts]
 crdtsign = "crdtsign.scripts.cli:cli"
 crdtsign-app = "crdtsign.scripts.app:app"
+test-scalewriter = "crdtsign.scripts.scalability_test:run_scale_write"
 
 [dependency-groups]
 dev = [

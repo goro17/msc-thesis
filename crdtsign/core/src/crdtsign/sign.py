@@ -1,6 +1,7 @@
 """Methods for signing and verifying files."""
 
 import hashlib
+import os
 from pathlib import Path
 
 from cryptography.exceptions import InvalidSignature
@@ -8,6 +9,13 @@ from cryptography.hazmat.primitives.asymmetric.ed448 import (
     Ed448PrivateKey,
     Ed448PublicKey,
 )
+
+
+def get_file_hash(file_path: os.PathLike) -> str:
+    """Returns the file's hash in SHA256."""
+    with open(file_path, "rb") as f:
+        file_content = f.read()
+    return hashlib.sha256(file_content).digest().hex()
 
 
 def sign(file_path: Path, private_key: Ed448PrivateKey) -> bytes:
