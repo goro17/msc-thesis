@@ -23,33 +23,35 @@ Advancements in this field sought to optimally achieve these pivotal demands hav
 the emergence of more advanced paradigms, such as \textit{cloud computing}, which poses
 itself as a model that enables ubiquitous, on-demand access to a shared pool of
 configurable computing resources -- networks, servers, storage, services -- provisioned
-with minimal management effort\cite{hamdaqa2012cc}. The advent of cloud computing has
+with minimal management effort \cite{hamdaqa2012cc}. The advent of cloud computing has
 fueled an increasing interest in applications that are built to empower collaborative
 tasks. Platforms like Google Drive\footnote{https://drive.google.com}, Microsoft
 OneDrive\footnote{https://onedrive.live.com}, and
 Dropbox\footnote{https://dropbox.com} enable groups of two or more users to engage
 in common tasks by sharing access to a set of resources -- documents, spreadsheets,
 presentations, images, ... -- from anywhere in the world, in real
-time\cite{ellis1989groupware}.
+time \cite{ellis1989groupware}.
 
 Within collaborative applications lies the challenge of making sure that concurrent
 updates are applied seamlessly and without conflicts, especially in situations where
 users may be working across different geographical locations with varying network
 latencies. Despite the risk of network connectivity being intermittent, users expect
 their collaborative experience to be responsive, their changes to be preserved, and
-conflicts to be resolved seamlessly without loss of data. Traditional approaches to
-this challenge, like the one adopted by Google Drive, heavily rely on centralized
-conflict resolution strategies such as \textit{Operational Transformation} (OT), where a
-single node acts as the authoritative source of truth and mediates all concurrent
-changes\cite{sun1998ot}. While this mechanism has proven to be reliable, a compelling
-alternative could be achieved by employing a truly decentralized, peer-to-peer (P2P)
-network, over which data is replicated across multiple nodes and concurrent changes are
-handled without the need of a centralized authority.
+conflicts to be resolved seamlessly without loss of data. This challenge can be broadly
+addressed either through \textit{consensus} -- leveraging algorithms such as Paxos or
+Raft -- or through \textit{convergence} \cite{kleppmann2022research}. Traditional
+approaches to achieve convergence, like the one adopted by Google Drive, heavily rely on
+centralized conflict resolution strategies such as \textit{Operational Transformation}
+(OT), where a single node acts as the authoritative source of truth and mediates all
+concurrent changes \cite{sun1998ot}. While this mechanism has proven to be reliable, a
+compelling alternative could be achieved by employing a truly decentralized, peer-to-peer
+(P2P) network, over which data is replicated across multiple nodes and concurrent changes
+are handled without the need of a centralized authority.
 
 Conflict-free Replicated Data Types (CRDTs) offer a powerful solution suitable to support
 highly available file sharing and collaborative systems. CRDTs are data structures that
 allow the system to update any replica independently and concurrently, without
-coordinating with other replicas\cite{almeida2024crdts}. The core benefit is that the
+coordinating with other replicas \cite{almeida2024crdts}. The core benefit is that the
 data type itself contains an algorithm that automatically resolves any inconsistencies,
 guaranteeing that replicas will eventually converge to an identical state, even in the
 case in which a node may receive updates out of order.

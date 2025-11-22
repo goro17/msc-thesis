@@ -1,56 +1,117 @@
-\chapter{Background on Conflict-free Replicated Data Types}
+\chapter{Fundamentals of Conflict-free Replicated Data Types}
 
-\section{The Challenge of Data Consistency in Distributed Systems}
+\section{Consistency in Distributed Systems}
 
-The proliferation of distributed computing paradigms, driven by the need for systems that are
-highly available and performant, has brought the challenge of data consistency to the
-forefront. As applications increasingly span multiple devices and geographical locations,
-ensuring that all users and systems operate on a coherent view ot shared data becomes a
-complex endeavor.
+Since the early days of networked computing systems, the challenge of maintaining strong
+consistency (or \textit{linearizability} \cite{HerlihyW90}) has been a critical research
+topic. As distributed systems started spanning across an ever increasing amount of
+devices spread over vast geographic locations, ensuring that all the nodes of a system
+operate on a coherent shared state at all times becomes a nontrivial task. The complexity
+also lies in making sure that these systems are always available and robust to any fault
+or partition that the network could be affected to. While traditional approaches to
+replication, such as Lamport's state machine \cite{lamport1984using}, achieve consistency by
+relying heavily on central coordination mechanisms, the adoption of such approaches
+often comes at the cost of higher latency and disruption of availability under network
+partitions. This trade-off has been formalized in literature by the CAP
+Theorem \cite{brewer2000towards,gilbert2002brewers}, which identifies three key
+guarantees sought by distributed systems:
 
-Replication approaches are frequently employed to address this challenge. By providing
-multiple copies of data, called \textit{replicas}, across several nodes, the system can
-ensure that users may access the same piece of information from multiple locations,
-regardless of any potential system failure that may disrupt communication between the nodes
-of the network. Within this effort, however, arises the fundamental problem of making sure
-that the data remains consistent across all replicas, especially in situations where
-multiple users may concurrently update such data. Moreover, achieving a strongly consistent
-system comes at the cost of latency, as it requires replicas to adopt robust coordination
-mechanisms, such as distributed consensus algorithms or two-phase commits, before finalizing
-an update operation. This trade-off has been formalized in literature by the CAP Theorem,
-which identifies the most desirable properties of a distributed system as
-\textit{consistency}, \textit{availability}, and \textit{partition tolerance}, and
-states that a real-world system can only simultaneously provide two out of these three
-properties \cite{gilbert2002brewers}.
+\begin{itemize}
+    \item \textit{Consistency} (C): all nodes of the systems are up to date with the updates
+        issued to the internal state. In the context of an atomic read/write register,
+        every read operation receives the most recent write -- or an error.
+    \item \textit{Availability} (A): every request received by a non-failing node must
+        result in a response.
+    \item \textit{Partition tolerance} (P): the system continues to operate despite faulty
+        conditions, such as network outages, that lead to arbitrary message loss between
+        nodes.
+\end{itemize}
 
-In many modern applications, particularly those operating over unreliable networks or
-prioritizing user experience, availability and partition tolerance remain crucial, leading
-to the need for weaker consistency models capable of functioning effectively under these
-constraints. One such model, known as \textit{optimistic replication}, addresses concurrency
-control among replicas by letting the data be accessed "optimistically" (without a priori
-synchronization), propagating the resulting updates in the background, and fixing conflicts
-after they happen \cite{saito2005optimistic}. Another prominent example of weak consistency
-model, named \text{eventual consistency} (EC), allows for replicas to temporarily diverge,
-but guarantees that, when updates to the data are no longer issued, they will converge to
-an identical state \cite{terry1994session}. This model significantly enhances availability
-and responsiveness, as operations can proceed without waiting for acknowledgement from other
+Moreover, the CAP Theorem states that it is impossible for a real-world system to
+simultaneously guarantee more than two of these three properties.
+
+Since network partitions may always occur, system designers were forced to make explicit
+choices about the system's behavior during partitions, by either sacrificing consistency
+or availability. As a consequence, two dominant design philosophies emerged, being
+\textit{AP} (Availability-Partition tolerance) and \textit{CP} (Consistency-Partition
+tolerance) systems. In AP systems, such as Amazon's Dynamo \cite{decandia2007dynamo},
+eventual inconsistencies between replicas that may arise during network outages are
+tolerated to ensure that the system is kept operational at all times. Conversely, CP
+systems -- such as Google's Bigtable \cite{chang2008bigtable} -- prioritize strong
+consistency guarantees, and particular measures are adopted to ensure that inconsistent
+data is never served, such as affecting the system's availability during partitions.
+While replicated systems are geared towards the latter approach, high availability
+needs remain interesting from a business standpoint, as "even the slightest outage has
+significant financial consequences and impacts customer trust" \cite{decandia2007dynamo}.
+For this reason, research was driven towards alternative consistency models, namely those
+where the consistency guarantees are relaxed, so that all three properties denoted by the
+CAP Theorem could simultaneously co-exist.
+
+One such consistency model, known as \textit{optimistic replication}, addresses
+concurrency control among replicas by letting the data be accessed "optimistically"
+(without a priori synchronization), propagating the resulting updates in the background,
+and fixing conflicts after they happen \cite{saito2005optimistic}.
+Another prominent example of weak consistency model, named \textit{eventual consistency}
+(EC), allows for replicas to temporarily diverge, but guarantees that, when updates to the
+replicas are no longer issued, they will converge to an identical
+state \cite{terry1994session}. This model significantly enhances availability and
+responsiveness, as operations can proceed without waiting for acknowledgement from other
 peers. However, if concurrent updates are not reconciled in a principled manner, replicas may
-end up in an inconsistent state, leading to erroneous behavior within the system. An
+end up in an inconsistent state, leading to erroneous behavior within the system. An 
 alternative approach to conflict resolution has led to the emergence of CRDTs, which provide
 a mathematically sound framework for achieving state convergence without the need for
 synchronization among replicas \cite{preguiça2018conflict}.
 
 \section{Foundational Concepts on Conflict-free Replicated Data Types}
+% TODO: Continue from here
 
-Conflict-free Replicated Data Types (CRDTs) are abstract data types specifically engineered
-for replication across multiple processes in a distributed system. A defining characteristic
-of CRDTs is that any replica can be modified without requiring immediate coordination with
-other replicas \cite{shapiro2011conflict}. This property is fundamental to achieving
-high availability and low latency in distributed applications.
+Conflict-free Replicated Data Types (CRDTs) are abstract data types specifically
+engineered for replication across multiple processes in a distributed system. A defining
+characteristic of CRDTs is that any replica can be modified without requiring immediate
+coordination with other replicas \cite{shapiro2011conflict}. This property is fundamental
+to achieving high availability and low latency in distributed applications.
+
+\subsection{CRDT Operation Semantics}
+
+A CRDT can be implemented as a standard data type, which provides a set of operations,
+which usually can be distinguished into two categories \cite{preguiça2018conflict}:
+
+\begin{itemize}
+    \item \textit{query} operations, which perform a lookup on the internal state --
+        without altering it -- and return a result based on what is observed;
+    \item \textit{update} operations, which perform a set of actions that explicitly
+        mutate the internal state.
+\end{itemize}
+
+As we will see when discussing CRDT implementations, performing an update on a CRDT which
+is replicated across $n$ nodes firstly involves updating the state of a single replica --
+the one which is directly accessed by the application -- and then propagating the update
+to all other nodes of the network. When nodes receive an update, they apply it to their
+replica, and autonomously resolve any conflicts that may arise -- in other words, they
+\textit{merge} the update with their internal state. Broadly speaking, designing an
+effective update operation can be regarded as a complex endeavor, as failure to properly
+address the correctness criteria involving the set of operations that form the merged
+update may result in compromising the system's convergence guarantees. More precisely,
+the implementation of update operations must guarantee convergence by satisfying one or
+more of the following key properties:
+
+\begin{itemize}
+    \item \textit{commutativity} -- the order in which delivered updates are applied to
+        the replica does not affect the final state.
+    \item \textit{associativity} -- % TODO
+    \item \textit{idempotency} -- % TODO
+\end{itemize}
+
+In most cases, it is desirable to deal with commutative operations; due to the
+reliability of the network, a replica may receive updates out of order, and still be
+required to converge to a state that is consistent with all other replicas, once all the
+updates are applied. % TODO: explain how associativity and idempotency tie into CRDTs.
 
 \subsection{Strong Eventual Consistency}
-CRDTs are designed to guarantee a strong form of eventual consistency known as Strong
-Eventual Consistency (SEC)\cite{shapiro2011conflict}, in which two replicas reach the same
+Convergence in the case of CRDTs is backed by a stronger version of the EC model, known
+as \textit{Strong Eventual Consistency} (SEC)\cite{shapiro2011conflict}
+% TODO: rewrite it better
+, in which two replicas reach the same
 final state if they have received the same set of updates.
 
 \paragraph{Eventual Consistency (EC)} An object is said to be \textit{Eventually Consistent}
@@ -75,6 +136,11 @@ SEC achieves state convergence without requiring complex, ad-hoc conflict resolu
 to be implemented by the developer. Instead, the "conflict-free" nature is embedded within
 the design of the data type itself; concurrent operations are either inherently commutative
 or are resolved by a deterministic merge procedure built into the CRDT.
+
+\subsection{Mathematical foundations}
+% TODO: Define join semilattice, how does it tie into commutativity, associativity,
+% idempotency, and how it branches into two approaches for convergence (state-based vs.
+% op-based, with delta-state being a hybrid between the two.
 
 \section{State-based vs. Operation-based CRDTs}
 
