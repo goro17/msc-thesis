@@ -63,13 +63,17 @@ a mathematically sound framework for achieving state convergence without the nee
 synchronization among replicas \cite{preguiça2018conflict}.
 
 \section{Foundational Concepts on Conflict-free Replicated Data Types}
-% TODO: Continue from here
 
 Conflict-free Replicated Data Types (CRDTs) are abstract data types specifically
 engineered for replication across multiple processes in a distributed system. A defining
 characteristic of CRDTs is that any replica can be modified without requiring immediate
-coordination with other replicas \cite{shapiro2011conflict}. This property is fundamental
+coordination with other replicas, and replicas that have received the same updates reach
+the same state deterministically \cite{shapiro2011conflict}. This property is fundamental
 to achieving high availability and low latency in distributed applications.
+
+The advantage of CRDTs lies in their mathematical foundation. Rather than relying on
+application-specific conflict resolution logic, they ensure convergence through carefully
+designed data structures whose operations satisfy specific algebraic properties.
 
 \subsection{CRDT Operation Semantics}
 
@@ -96,23 +100,24 @@ the implementation of update operations must guarantee convergence by satisfying
 more of the following key properties:
 
 \begin{itemize}
-    \item \textit{commutativity} -- the order in which delivered updates are applied to
-        the replica does not affect the final state.
-    \item \textit{associativity} -- % TODO
-    \item \textit{idempotency} -- % TODO
+    \item \textit{commutativity}: the order in which delivered updates are applied to the
+        replica does not affect the final outcome;
+    \item \textit{associativity}: the order in which merges are grouped does not affect
+        the outcome;
+    \item \textit{idempotency} -- repeated applications of an update yields the same
+        outcome as a single application.
 \end{itemize}
 
 In most cases, it is desirable to deal with commutative operations; due to the
 reliability of the network, a replica may receive updates out of order, and still be
 required to converge to a state that is consistent with all other replicas, once all the
-updates are applied. % TODO: explain how associativity and idempotency tie into CRDTs.
+updates are applied.
 
 \subsection{Strong Eventual Consistency}
 Convergence in the case of CRDTs is backed by a stronger version of the EC model, known
-as \textit{Strong Eventual Consistency} (SEC)\cite{shapiro2011conflict}
-% TODO: rewrite it better
-, in which two replicas reach the same
-final state if they have received the same set of updates.
+as \textit{Strong Eventual Consistency} (SEC)\cite{shapiro2011conflict}, which guarantees
+that, once all nodes have received the same set of updates, they will (eventually) reach
+the same final state. Formally, we can define the following.
 
 \paragraph{Eventual Consistency (EC)} An object is said to be \textit{Eventually Consistent}
 if it satisfies the following properties:
@@ -133,63 +138,91 @@ following additional property:
 \end{itemize}
 
 SEC achieves state convergence without requiring complex, ad-hoc conflict resolution logic
-to be implemented by the developer. Instead, the "conflict-free" nature is embedded within
-the design of the data type itself; concurrent operations are either inherently commutative
-or are resolved by a deterministic merge procedure built into the CRDT.
+to be implemented at the application level. Instead, the "conflict-free" nature is embedded
+within the design of the data type itself; concurrent operations are either inherently
+commutative or are resolved by a deterministic merge procedure built into the CRDT.
 
-\subsection{Mathematical foundations}
-% TODO: Define join semilattice, how does it tie into commutativity, associativity,
-% idempotency, and how it branches into two approaches for convergence (state-based vs.
-% op-based, with delta-state being a hybrid between the two.
+\section{Mathematical foundations of convergence}
+We will now describe some notions from order theory that are useful to understand the
+mathematical properties behind CRDTs' guarantee of convergence.
 
-\section{State-based vs. Operation-based CRDTs}
+\subsection{Partial Order and Semilattices}
 
-The design and implementation of CRDTs primarilys follow two distinct strategies for
+A fundamental mathematical structure underlying CRDTs is the join semilattice. Before we
+describe the definition of join semilattice, we will provide the definition for what a 
+partially ordered set and what a least upper bound is \cite{davey2002introduction}.
+
+\paragraph{Partial Order} A \textit{partially ordered} set -- or \textit{poset} -- is
+a set $S$ and a binary relation $\leq$ such that, for all $a,b,c\in S$, the following
+conditions hold:
+
+\begin{enumerate}
+    \item $a \leq a$ (\textit{reflexivity});
+    \item If $a \leq b$ and $b \leq a$, then $a = b$ (\textit{antisymmetry});
+    \item If $a \leq b$ and $b \leq c$, then $a \leq c$ (\textit{transitivity}).
+\end{enumerate}
+
+A partially ordered set is denoted as $(S, \leq)$.
+
+\paragraph{Least upper bound} A \textit{least upper bound} (LUB) of two elements $a$ and
+$b$ in a partially ordered set is an element that satisfies the following conditions.
+
+\begin{enumerate}
+    \item The LUB is greater than or equal to both $a$ and $b$. That is,
+        $\text{LUB} \geq a$ and $b \text{LUB} \geq b$.
+    \item There is no other element $c$, with $a \geq c$ and $b \geq c$, such that $c$ is
+        less or equal than the LUB.
+\end{enumerate}
+
+Through the LUB, we can also understand the definition of a join. For a partially ordered
+set $(S, \leq)$ and two elements $a,b \in S$, the \textit{join} of $a$ and $b$ -- denoted
+by $a \sqcup b$, is a LUB of $S$. Fundamentally, the join obeys satisfies three key
+properties that are relevant to CRDTs:
+
+\begin{enumerate}
+    \item $a \sqcup b = b \sqcup a$ (\textit{commutativity});
+    \item $(a \sqcup b) \sqcup c = a \sqcup (b \sqcup c)$ (\textit{associativity});
+    \item $a \sqcup a = a$ (\textit{idempotency}).
+\end{enumerate}
+
+\paragraph{Join semilattice} A \textit{join semilattice} is a partially ordered set
+$(S,\leq)$ where there exists a join $x \sqcup y$ for any $x,y \in S$.
+
+It is also useful to observe that a join semilattice is \textit{monotonic}. That is, for
+any $a,b \in S$, $a \lt a \sqcup b$.
+
+The properties of a join semilattice are crucial in ensuring that, regardless of the
+order in which updates are merged, the result is always the same and represents a
+consistent "join" of the information from all replicas. Moreover, the guarantee of
+monotonicity ensures that replicas always "grow forward" through merge operations.
+
+\section{Taxonomy of CRDTs}
+
+The design and implementation of CRDTs primarily follows two distinct strategies for
 replication: \textit{state-based} and \textit{operation-based}
 \cite{shapiro2011comprehensive}.
 
-\subsection{State-based CRDTs (CvRDTs)}
+\subsection{State-based CRDTs}
 
 State-based CRDTs, also known as convergent replicated data types (CvRDTs), operate on the
 principle of replicas exchanging their entire current state. When an update to a replica's
 state is issued, the replica first applies the update locally, and then broadcasts the
-resulting state to the other replicas. The replicas receiving the updated state employ a
-\textit{merge} function to combine the received state with their own local state. for
-convergence to be guaranteed, this merge function must possess three key mathematical
-properties:
-
-\begin{itemize}
-    \item \textbf{Commutativity:} the order in which states are merged does not affect the
-        outcome;\\
-        \begin{equation}
-            \begin{aligned} x \cdot y = y \cdot x \end{aligned} 
-        \end{equation}
-    \item \textbf{Associativity:} the order in which merges are grouped does not affect the
-        outcome;\\
-        \begin{equation}
-            \begin{aligned} (x \cdot y) \cdot z = x \cdot (y \cdot z) \end{aligned}
-        \end{equation}
-    \item \textbf{Idempotency:} merging identical states produces the same resulting state
-        (even when the merge is repeated multiple times).
-        \begin{equation}
-            \begin{aligned} x \cdot x = x \end{aligned}
-        \end{equation}
-\end{itemize}
-
-Thanks to these properties, state-based CRDTs can achieve state convergence among replicas,
-as long as the replicas have received the same set of updates.
+resulting state to the other replicas. The replicas receiving the updated state apply a
+merge operation to combine the received state with their own local state. It is important
+to note that the merge operation is both commutative, associative, and idempotent. Thanks
+to these guarantees, updates can arrive in any order, and can arrive more than once. As
+long as all replicas receive the same updates, they will have an equivalent state.
 
 \subsection{Operation-based CRDTs (CmRDTs)}
 Operation-based CRDTs, also known as commutative replicated data types (CmRDTs), take a
 different approach. Instead of transmitting the entire updated state, replicas broadcast
 the update \textit{operations} themselves as they occur locally. These operations are then
 applied locally by the receiving replicas. For CmRDTs to ensure convergence, the operations
-must be designed to be commutative when applied concurrently. Furthermore, CmRDTs typically
-impose stricter constraints on the underlying communication infrastructure. Guarantees such
-as exactly-once delivery and causal delivery of operations are often necessary to ensure
-that all operations are applied consistently across replicas.
+must be designed to enforce causal order when applied concurrently. This means that
+op-based CRDTs need a deterministic mechanism to determine the order of concurrent
+messages.
 
-\subsection{Delta-state CRDTs}
+\subsection{Delta State-based CRDTs}
 A significant optimization, particularly for state-based CRDTs, is the concept of
 delta-state CRDTs (\textit{$\delta$-CRDTs}). Instead of transmitting the entire state,
 $\delta$-CRDTs only need to transmit the incremental changes (or \textit{deltas}) that have
