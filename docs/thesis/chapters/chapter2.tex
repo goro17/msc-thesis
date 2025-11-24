@@ -169,7 +169,7 @@ $b$ in a partially ordered set is an element that satisfies the following condit
 
 \begin{enumerate}
     \item The LUB is greater than or equal to both $a$ and $b$. That is,
-        $\text{LUB} \geq a$ and $b \text{LUB} \geq b$.
+        $\text{LUB} \geq a$ and $\text{LUB} \geq b$.
     \item There is no other element $c$, with $a \geq c$ and $b \geq c$, such that $c$ is
         less or equal than the LUB.
 \end{enumerate}
@@ -189,7 +189,7 @@ properties that are relevant to CRDTs:
 $(S,\leq)$ where there exists a join $x \sqcup y$ for any $x,y \in S$.
 
 It is also useful to observe that a join semilattice is \textit{monotonic}. That is, for
-any $a,b \in S$, $a \lt a \sqcup b$.
+any $a,b \in S$, $a < a \sqcup b$.
 
 The properties of a join semilattice are crucial in ensuring that, regardless of the
 order in which updates are merged, the result is always the same and represents a

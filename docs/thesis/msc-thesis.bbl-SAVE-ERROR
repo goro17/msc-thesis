@@ -1,0 +1,788 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global/global}
+    \entry{hamdaqa2012cc}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=fe9f4ccf72cb93889891f274351a95cf}{%
+           family={Hamdaqa},
+           familyi={H\bibinitperiod},
+           given={Mohammad},
+           giveni={M\bibinitperiod}}}%
+        {{hash=78964dabe8e17b7d22bb75694bcab05a}{%
+           family={Tahvildari},
+           familyi={T\bibinitperiod},
+           given={Ladan},
+           giveni={L\bibinitperiod}}}%
+      }
+      \strng{namehash}{52673ef17be7a05488960432a2ae4075}
+      \strng{fullhash}{52673ef17be7a05488960432a2ae4075}
+      \strng{fullhashraw}{52673ef17be7a05488960432a2ae4075}
+      \strng{bibnamehash}{52673ef17be7a05488960432a2ae4075}
+      \strng{authorbibnamehash}{52673ef17be7a05488960432a2ae4075}
+      \strng{authornamehash}{52673ef17be7a05488960432a2ae4075}
+      \strng{authorfullhash}{52673ef17be7a05488960432a2ae4075}
+      \strng{authorfullhashraw}{52673ef17be7a05488960432a2ae4075}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{isbn}{9780123965356}
+      \field{journaltitle}{Advances in Computers}
+      \field{month}{12}
+      \field{title}{Cloud Computing Uncovered: A Research Landscape}
+      \field{volume}{86}
+      \field{year}{2012}
+      \verb{doi}
+      \verb 10.1016/B978-0-12-396535-6.00002-8
+      \endverb
+    \endentry
+    \entry{ellis1989groupware}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=86dc2805509dfc8d5bf1496e5424949f}{%
+           family={Ellis},
+           familyi={E\bibinitperiod},
+           given={C.\bibnamedelimi A.},
+           giveni={C\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=47ab85692a6391e7d4d59ea7ff9a69ae}{%
+           family={Gibbs},
+           familyi={G\bibinitperiod},
+           given={S.\bibnamedelimi J.},
+           giveni={S\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {New York, NY, USA}%
+      }
+      \list{publisher}{1}{%
+        {Association for Computing Machinery}%
+      }
+      \strng{namehash}{698a8c2a8d8586aece070c0e220b424a}
+      \strng{fullhash}{698a8c2a8d8586aece070c0e220b424a}
+      \strng{fullhashraw}{698a8c2a8d8586aece070c0e220b424a}
+      \strng{bibnamehash}{698a8c2a8d8586aece070c0e220b424a}
+      \strng{authorbibnamehash}{698a8c2a8d8586aece070c0e220b424a}
+      \strng{authornamehash}{698a8c2a8d8586aece070c0e220b424a}
+      \strng{authorfullhash}{698a8c2a8d8586aece070c0e220b424a}
+      \strng{authorfullhashraw}{698a8c2a8d8586aece070c0e220b424a}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0163-5808}
+      \field{journaltitle}{SIGMOD Rec.}
+      \field{month}{6}
+      \field{number}{2}
+      \field{title}{Concurrency control in groupware systems}
+      \field{volume}{18}
+      \field{year}{1989}
+      \field{pages}{399\bibrangedash 407}
+      \range{pages}{9}
+      \verb{doi}
+      \verb 10.1145/66926.66963
+      \endverb
+    \endentry
+    \entry{kleppmann2022research}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=34b8d5b1d29d175527a6642f3ec8a76d}{%
+           family={Kleppmann},
+           familyi={K\bibinitperiod},
+           given={Martin},
+           giveni={M\bibinitperiod}}}%
+        {{hash=cedb170d9a16c7b10dad821288547c72}{%
+           family={Alvaro},
+           familyi={A\bibinitperiod},
+           given={Peter},
+           giveni={P\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {New York, NY, USA}%
+      }
+      \list{publisher}{1}{%
+        {Association for Computing Machinery}%
+      }
+      \strng{namehash}{30eb2b696aeef8f3c1590cd4b9651959}
+      \strng{fullhash}{30eb2b696aeef8f3c1590cd4b9651959}
+      \strng{fullhashraw}{30eb2b696aeef8f3c1590cd4b9651959}
+      \strng{bibnamehash}{30eb2b696aeef8f3c1590cd4b9651959}
+      \strng{authorbibnamehash}{30eb2b696aeef8f3c1590cd4b9651959}
+      \strng{authornamehash}{30eb2b696aeef8f3c1590cd4b9651959}
+      \strng{authorfullhash}{30eb2b696aeef8f3c1590cd4b9651959}
+      \strng{authorfullhashraw}{30eb2b696aeef8f3c1590cd4b9651959}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{The return of a popular feature that shares the joy and utility of reading CS research between academics and their counterparts in industry.}
+      \field{issn}{0001-0782}
+      \field{journaltitle}{Commun. ACM}
+      \field{month}{10}
+      \field{number}{11}
+      \field{title}{Research for practice: convergence}
+      \field{volume}{65}
+      \field{year}{2022}
+      \field{pages}{104\bibrangedash 106}
+      \range{pages}{3}
+      \verb{doi}
+      \verb 10.1145/3563901
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1145/3563901
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1145/3563901
+      \endverb
+    \endentry
+    \entry{sun1998ot}{inproceedings}{}{}
+      \name{author}{2}{}{%
+        {{hash=637fdbefe4bb1ef3b5f562de5d806ecc}{%
+           family={Sun},
+           familyi={S\bibinitperiod},
+           given={Chengzheng},
+           giveni={C\bibinitperiod}}}%
+        {{hash=0ad9b69a59ebe8345ec1a2221ee09793}{%
+           family={Ellis},
+           familyi={E\bibinitperiod},
+           given={Clarence},
+           giveni={C\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Seattle, Washington, USA}%
+      }
+      \list{publisher}{1}{%
+        {Association for Computing Machinery}%
+      }
+      \strng{namehash}{5fe4f39d547f4ddf51c082dd98ea295f}
+      \strng{fullhash}{5fe4f39d547f4ddf51c082dd98ea295f}
+      \strng{fullhashraw}{5fe4f39d547f4ddf51c082dd98ea295f}
+      \strng{bibnamehash}{5fe4f39d547f4ddf51c082dd98ea295f}
+      \strng{authorbibnamehash}{5fe4f39d547f4ddf51c082dd98ea295f}
+      \strng{authornamehash}{5fe4f39d547f4ddf51c082dd98ea295f}
+      \strng{authorfullhash}{5fe4f39d547f4ddf51c082dd98ea295f}
+      \strng{authorfullhashraw}{5fe4f39d547f4ddf51c082dd98ea295f}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Proceedings of the 1998 ACM Conference on Computer Supported Cooperative Work}
+      \field{isbn}{1581130090}
+      \field{series}{CSCW '98}
+      \field{title}{Operational transformation in real-time group editors: issues, algorithms, and achievements}
+      \field{year}{1998}
+      \field{pages}{59\bibrangedash 68}
+      \range{pages}{10}
+      \verb{doi}
+      \verb 10.1145/289444.289469
+      \endverb
+      \keyw{causality preservation,consistency maintenance,convergence,distributed computing,group editors,groupware,intention preservation,operational transformation}
+    \endentry
+    \entry{almeida2024crdts}{article}{}{}
+      \name{author}{1}{}{%
+        {{hash=cd7440e62312e9d30877948d743feec9}{%
+           family={Almeida},
+           familyi={A\bibinitperiod},
+           given={Paulo\bibnamedelima Sérgio},
+           giveni={P\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {New York, NY, USA}%
+      }
+      \list{publisher}{1}{%
+        {Association for Computing Machinery}%
+      }
+      \strng{namehash}{cd7440e62312e9d30877948d743feec9}
+      \strng{fullhash}{cd7440e62312e9d30877948d743feec9}
+      \strng{fullhashraw}{cd7440e62312e9d30877948d743feec9}
+      \strng{bibnamehash}{cd7440e62312e9d30877948d743feec9}
+      \strng{authorbibnamehash}{cd7440e62312e9d30877948d743feec9}
+      \strng{authornamehash}{cd7440e62312e9d30877948d743feec9}
+      \strng{authorfullhash}{cd7440e62312e9d30877948d743feec9}
+      \strng{authorfullhashraw}{cd7440e62312e9d30877948d743feec9}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0360-0300}
+      \field{journaltitle}{ACM Comput. Surv.}
+      \field{month}{11}
+      \field{number}{2}
+      \field{title}{Approaches to Conflict-free Replicated Data Types}
+      \field{volume}{57}
+      \field{year}{2024}
+      \verb{doi}
+      \verb 10.1145/3695249
+      \endverb
+      \keyw{Eventual consistency,replicated data types,CRDT}
+    \endentry
+    \entry{HerlihyW90}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=1a43fda3140a3de5a1ad7b3dd9694ff7}{%
+           family={Herlihy},
+           familyi={H\bibinitperiod},
+           given={Maurice\bibnamedelima P.},
+           giveni={M\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
+        {{hash=fc244460284339da385f5113c9207b79}{%
+           family={Wing},
+           familyi={W\bibinitperiod},
+           given={Jeannette\bibnamedelima M.},
+           giveni={J\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {New York, NY, USA}%
+      }
+      \list{publisher}{1}{%
+        {Association for Computing Machinery}%
+      }
+      \strng{namehash}{a5eadd65db9af944abc0097da217346d}
+      \strng{fullhash}{a5eadd65db9af944abc0097da217346d}
+      \strng{fullhashraw}{a5eadd65db9af944abc0097da217346d}
+      \strng{bibnamehash}{a5eadd65db9af944abc0097da217346d}
+      \strng{authorbibnamehash}{a5eadd65db9af944abc0097da217346d}
+      \strng{authornamehash}{a5eadd65db9af944abc0097da217346d}
+      \strng{authorfullhash}{a5eadd65db9af944abc0097da217346d}
+      \strng{authorfullhashraw}{a5eadd65db9af944abc0097da217346d}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0164-0925}
+      \field{journaltitle}{ACM Trans. Program. Lang. Syst.}
+      \field{month}{7}
+      \field{number}{3}
+      \field{title}{Linearizability: a correctness condition for concurrent objects}
+      \field{volume}{12}
+      \field{year}{1990}
+      \field{pages}{463\bibrangedash 492}
+      \range{pages}{30}
+      \verb{doi}
+      \verb 10.1145/78969.78972
+      \endverb
+    \endentry
+    \entry{lamport1984using}{article}{}{}
+      \name{author}{1}{}{%
+        {{hash=5d77435450d10a850a5b58577b9a456b}{%
+           family={Lamport},
+           familyi={L\bibinitperiod},
+           given={Leslie},
+           giveni={L\bibinitperiod}}}%
+      }
+      \strng{namehash}{5d77435450d10a850a5b58577b9a456b}
+      \strng{fullhash}{5d77435450d10a850a5b58577b9a456b}
+      \strng{fullhashraw}{5d77435450d10a850a5b58577b9a456b}
+      \strng{bibnamehash}{5d77435450d10a850a5b58577b9a456b}
+      \strng{authorbibnamehash}{5d77435450d10a850a5b58577b9a456b}
+      \strng{authornamehash}{5d77435450d10a850a5b58577b9a456b}
+      \strng{authorfullhash}{5d77435450d10a850a5b58577b9a456b}
+      \strng{authorfullhashraw}{5d77435450d10a850a5b58577b9a456b}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{ACM Transactions on Programming Languages and Systems}
+      \field{month}{4}
+      \field{title}{Using Time Instead of Timeout for Fault-Tolerant Distributed Systems}
+      \field{year}{1984}
+      \field{pages}{254\bibrangedash 280}
+      \range{pages}{27}
+      \verb{doi}
+      \verb 10.1145/2993.2994
+      \endverb
+    \endentry
+    \entry{brewer2000towards}{inproceedings}{}{}
+      \name{author}{1}{}{%
+        {{hash=0bd1f649dbf7110fe95ba1833204085d}{%
+           family={Brewer},
+           familyi={B\bibinitperiod},
+           given={Eric\bibnamedelima A.},
+           giveni={E\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Portland, Oregon, USA}%
+      }
+      \list{publisher}{1}{%
+        {Association for Computing Machinery}%
+      }
+      \strng{namehash}{0bd1f649dbf7110fe95ba1833204085d}
+      \strng{fullhash}{0bd1f649dbf7110fe95ba1833204085d}
+      \strng{fullhashraw}{0bd1f649dbf7110fe95ba1833204085d}
+      \strng{bibnamehash}{0bd1f649dbf7110fe95ba1833204085d}
+      \strng{authorbibnamehash}{0bd1f649dbf7110fe95ba1833204085d}
+      \strng{authornamehash}{0bd1f649dbf7110fe95ba1833204085d}
+      \strng{authorfullhash}{0bd1f649dbf7110fe95ba1833204085d}
+      \strng{authorfullhashraw}{0bd1f649dbf7110fe95ba1833204085d}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Proceedings of the Nineteenth Annual ACM Symposium on Principles of Distributed Computing}
+      \field{isbn}{1581131836}
+      \field{series}{PODC '00}
+      \field{title}{Towards robust distributed systems (abstract)}
+      \field{year}{2000}
+      \field{pages}{7}
+      \range{pages}{1}
+      \verb{doi}
+      \verb 10.1145/343477.343502
+      \endverb
+    \endentry
+    \entry{gilbert2002brewers}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=1de0da84dd43d0f480ffc9c70be34dc5}{%
+           family={Gilbert},
+           familyi={G\bibinitperiod},
+           given={Seth},
+           giveni={S\bibinitperiod}}}%
+        {{hash=6613a6fcc0482e691a0e8d84039b9458}{%
+           family={Lynch},
+           familyi={L\bibinitperiod},
+           given={Nancy},
+           giveni={N\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {New York, NY, USA}%
+      }
+      \list{publisher}{1}{%
+        {Association for Computing Machinery}%
+      }
+      \strng{namehash}{220e8940797e44af8a50c3d3d438c505}
+      \strng{fullhash}{220e8940797e44af8a50c3d3d438c505}
+      \strng{fullhashraw}{220e8940797e44af8a50c3d3d438c505}
+      \strng{bibnamehash}{220e8940797e44af8a50c3d3d438c505}
+      \strng{authorbibnamehash}{220e8940797e44af8a50c3d3d438c505}
+      \strng{authornamehash}{220e8940797e44af8a50c3d3d438c505}
+      \strng{authorfullhash}{220e8940797e44af8a50c3d3d438c505}
+      \strng{authorfullhashraw}{220e8940797e44af8a50c3d3d438c505}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0163-5700}
+      \field{journaltitle}{SIGACT News}
+      \field{month}{6}
+      \field{number}{2}
+      \field{title}{Brewer's conjecture and the feasibility of consistent, available, partition-tolerant web services}
+      \field{volume}{33}
+      \field{year}{2002}
+      \field{pages}{51\bibrangedash 59}
+      \range{pages}{9}
+      \verb{doi}
+      \verb 10.1145/564585.564601
+      \endverb
+    \endentry
+    \entry{decandia2007dynamo}{article}{}{}
+      \name{author}{9}{}{%
+        {{hash=d5c41c0ac7ba7e89ace423e49e7fdc44}{%
+           family={DeCandia},
+           familyi={D\bibinitperiod},
+           given={Giuseppe},
+           giveni={G\bibinitperiod}}}%
+        {{hash=6082e8ea5d31af84a1f8d23fe19f1069}{%
+           family={Hastorun},
+           familyi={H\bibinitperiod},
+           given={Deniz},
+           giveni={D\bibinitperiod}}}%
+        {{hash=65e5bb2e5094e3f29ff9489826202fec}{%
+           family={Jampani},
+           familyi={J\bibinitperiod},
+           given={Madan},
+           giveni={M\bibinitperiod}}}%
+        {{hash=fbf8232f34db8c435e88d3fda626ba27}{%
+           family={Kakulapati},
+           familyi={K\bibinitperiod},
+           given={Gunavardhan},
+           giveni={G\bibinitperiod}}}%
+        {{hash=69381b01b9ac73dc672002d91982b8ab}{%
+           family={Lakshman},
+           familyi={L\bibinitperiod},
+           given={Avinash},
+           giveni={A\bibinitperiod}}}%
+        {{hash=c3033dfe7499541df03f25d6df8e03d1}{%
+           family={Pilchin},
+           familyi={P\bibinitperiod},
+           given={Alex},
+           giveni={A\bibinitperiod}}}%
+        {{hash=4ad6c42d13d83343aea429cf41b629f5}{%
+           family={Sivasubramanian},
+           familyi={S\bibinitperiod},
+           given={Swaminathan},
+           giveni={S\bibinitperiod}}}%
+        {{hash=1aff2a593efecd57660f7e8f0600ffff}{%
+           family={Vosshall},
+           familyi={V\bibinitperiod},
+           given={Peter},
+           giveni={P\bibinitperiod}}}%
+        {{hash=288122751d34bf910fc7f5f89e9d3300}{%
+           family={Vogels},
+           familyi={V\bibinitperiod},
+           given={Werner},
+           giveni={W\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {New York, NY, USA}%
+      }
+      \list{publisher}{1}{%
+        {Association for Computing Machinery}%
+      }
+      \strng{namehash}{8ba41e09a0f2ba8f35f0541990aa5f3e}
+      \strng{fullhash}{02a5f6f3af91de01fdf370a160386494}
+      \strng{fullhashraw}{02a5f6f3af91de01fdf370a160386494}
+      \strng{bibnamehash}{02a5f6f3af91de01fdf370a160386494}
+      \strng{authorbibnamehash}{02a5f6f3af91de01fdf370a160386494}
+      \strng{authornamehash}{8ba41e09a0f2ba8f35f0541990aa5f3e}
+      \strng{authorfullhash}{02a5f6f3af91de01fdf370a160386494}
+      \strng{authorfullhashraw}{02a5f6f3af91de01fdf370a160386494}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0163-5980}
+      \field{journaltitle}{SIGOPS Oper. Syst. Rev.}
+      \field{month}{10}
+      \field{number}{6}
+      \field{title}{Dynamo: amazon's highly available key-value store}
+      \field{volume}{41}
+      \field{year}{2007}
+      \field{pages}{205\bibrangedash 220}
+      \range{pages}{16}
+      \verb{doi}
+      \verb 10.1145/1323293.1294281
+      \endverb
+      \keyw{scalability,reliability,performance}
+    \endentry
+    \entry{chang2008bigtable}{article}{}{}
+      \name{author}{9}{}{%
+        {{hash=99aa91509d23d29aa378129870419731}{%
+           family={Chang},
+           familyi={C\bibinitperiod},
+           given={Fay},
+           giveni={F\bibinitperiod}}}%
+        {{hash=4aecfb0cc2e1e3b7899129fa2a94e2b8}{%
+           family={Dean},
+           familyi={D\bibinitperiod},
+           given={Jeffrey},
+           giveni={J\bibinitperiod}}}%
+        {{hash=193bcec5240237591ad8fb697869f013}{%
+           family={Ghemawat},
+           familyi={G\bibinitperiod},
+           given={Sanjay},
+           giveni={S\bibinitperiod}}}%
+        {{hash=b93b6f26620de06e75f2a0a829012414}{%
+           family={Hsieh},
+           familyi={H\bibinitperiod},
+           given={Wilson\bibnamedelima C.},
+           giveni={W\bibinitperiod\bibinitdelim C\bibinitperiod}}}%
+        {{hash=02705ef81442ae8f11eac3ad9937b72f}{%
+           family={Wallach},
+           familyi={W\bibinitperiod},
+           given={Deborah\bibnamedelima A.},
+           giveni={D\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=52bd219ee38c5f14ff2c280e7e4216d1}{%
+           family={Burrows},
+           familyi={B\bibinitperiod},
+           given={Mike},
+           giveni={M\bibinitperiod}}}%
+        {{hash=aae0ced6a97ff5b4ca38e38013046ebe}{%
+           family={Chandra},
+           familyi={C\bibinitperiod},
+           given={Tushar},
+           giveni={T\bibinitperiod}}}%
+        {{hash=54829df18899a21970bee5323732f0f3}{%
+           family={Fikes},
+           familyi={F\bibinitperiod},
+           given={Andrew},
+           giveni={A\bibinitperiod}}}%
+        {{hash=f36b85d06eea0c3fb0e6347d9889189c}{%
+           family={Gruber},
+           familyi={G\bibinitperiod},
+           given={Robert\bibnamedelima E.},
+           giveni={R\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {New York, NY, USA}%
+      }
+      \list{publisher}{1}{%
+        {Association for Computing Machinery}%
+      }
+      \strng{namehash}{04df278898df96bfa712dd3ecb1365f9}
+      \strng{fullhash}{91f05fcac0234d78d4242dffda2a3cf2}
+      \strng{fullhashraw}{91f05fcac0234d78d4242dffda2a3cf2}
+      \strng{bibnamehash}{91f05fcac0234d78d4242dffda2a3cf2}
+      \strng{authorbibnamehash}{91f05fcac0234d78d4242dffda2a3cf2}
+      \strng{authornamehash}{04df278898df96bfa712dd3ecb1365f9}
+      \strng{authorfullhash}{91f05fcac0234d78d4242dffda2a3cf2}
+      \strng{authorfullhashraw}{91f05fcac0234d78d4242dffda2a3cf2}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0734-2071}
+      \field{journaltitle}{ACM Trans. Comput. Syst.}
+      \field{month}{6}
+      \field{number}{2}
+      \field{title}{Bigtable: A Distributed Storage System for Structured Data}
+      \field{volume}{26}
+      \field{year}{2008}
+      \verb{doi}
+      \verb 10.1145/1365815.1365816
+      \endverb
+      \keyw{Large-Scale Distributed Storage}
+    \endentry
+    \entry{saito2005optimistic}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=239075728c2c34688383bea77ccfbce5}{%
+           family={Saito},
+           familyi={S\bibinitperiod},
+           given={Yasushi},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=f13a03ea8c9e34968f9bc55bb4e93d9f}{%
+           family={Shapiro},
+           familyi={S\bibinitperiod},
+           given={Marc},
+           giveni={M\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {New York, NY, USA}%
+      }
+      \list{publisher}{1}{%
+        {Association for Computing Machinery}%
+      }
+      \strng{namehash}{5c65c198e45b397ae92b359088fd94a4}
+      \strng{fullhash}{5c65c198e45b397ae92b359088fd94a4}
+      \strng{fullhashraw}{5c65c198e45b397ae92b359088fd94a4}
+      \strng{bibnamehash}{5c65c198e45b397ae92b359088fd94a4}
+      \strng{authorbibnamehash}{5c65c198e45b397ae92b359088fd94a4}
+      \strng{authornamehash}{5c65c198e45b397ae92b359088fd94a4}
+      \strng{authorfullhash}{5c65c198e45b397ae92b359088fd94a4}
+      \strng{authorfullhashraw}{5c65c198e45b397ae92b359088fd94a4}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0360-0300}
+      \field{journaltitle}{ACM Comput. Surv.}
+      \field{month}{3}
+      \field{number}{1}
+      \field{title}{Optimistic replication}
+      \field{volume}{37}
+      \field{year}{2005}
+      \field{pages}{42\bibrangedash 81}
+      \range{pages}{40}
+      \verb{doi}
+      \verb 10.1145/1057977.1057980
+      \endverb
+      \keyw{Replication,disconnected operation,distributed systems,large scale systems,optimistic techniques}
+    \endentry
+    \entry{terry1994session}{inproceedings}{}{}
+      \name{author}{6}{}{%
+        {{hash=705464a9193c1681bce6c26befde2daf}{%
+           family={Terry},
+           familyi={T\bibinitperiod},
+           given={D.B.},
+           giveni={D\bibinitperiod}}}%
+        {{hash=ceb4af602fd79e4c9175fe708e2e6ab3}{%
+           family={Demers},
+           familyi={D\bibinitperiod},
+           given={A.J.},
+           giveni={A\bibinitperiod}}}%
+        {{hash=3d50aae07b750f0b814bcd89cc2b4374}{%
+           family={Petersen},
+           familyi={P\bibinitperiod},
+           given={K.},
+           giveni={K\bibinitperiod}}}%
+        {{hash=a9b475c74238e2df0ce9e7b8cbd5406d}{%
+           family={Spreitzer},
+           familyi={S\bibinitperiod},
+           given={M.J.},
+           giveni={M\bibinitperiod}}}%
+        {{hash=df94698e6da1061a9ace41aa4538161c}{%
+           family={Theimer},
+           familyi={T\bibinitperiod},
+           given={M.M.},
+           giveni={M\bibinitperiod}}}%
+        {{hash=f58be8c8c0fa30c9f6362410d2f7aea6}{%
+           family={Welch},
+           familyi={W\bibinitperiod},
+           given={B.B.},
+           giveni={B\bibinitperiod}}}%
+      }
+      \strng{namehash}{46a22c0615b83e9fec476dece49a0460}
+      \strng{fullhash}{4956ffba755813a8d9465f29b0d1807f}
+      \strng{fullhashraw}{4956ffba755813a8d9465f29b0d1807f}
+      \strng{bibnamehash}{4956ffba755813a8d9465f29b0d1807f}
+      \strng{authorbibnamehash}{4956ffba755813a8d9465f29b0d1807f}
+      \strng{authornamehash}{46a22c0615b83e9fec476dece49a0460}
+      \strng{authorfullhash}{4956ffba755813a8d9465f29b0d1807f}
+      \strng{authorfullhashraw}{4956ffba755813a8d9465f29b0d1807f}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Proceedings of 3rd International Conference on Parallel and Distributed Information Systems}
+      \field{title}{Session guarantees for weakly consistent replicated data}
+      \field{year}{1994}
+      \field{pages}{140\bibrangedash 149}
+      \range{pages}{10}
+      \verb{doi}
+      \verb 10.1109/pdis.1994.331722
+      \endverb
+      \keyw{Application software;Scalability;Mobile computing;Pipelines;Computer science;Laboratories;Databases;Buildings;Computer applications;Mobile communication}
+    \endentry
+    \entry{preguiça2018conflict}{misc}{}{}
+      \name{author}{1}{}{%
+        {{hash=01eb907fe4f9429b911ea87887f73363}{%
+           family={Preguiça},
+           familyi={P\bibinitperiod},
+           given={Nuno},
+           giveni={N\bibinitperiod}}}%
+      }
+      \strng{namehash}{01eb907fe4f9429b911ea87887f73363}
+      \strng{fullhash}{01eb907fe4f9429b911ea87887f73363}
+      \strng{fullhashraw}{01eb907fe4f9429b911ea87887f73363}
+      \strng{bibnamehash}{01eb907fe4f9429b911ea87887f73363}
+      \strng{authorbibnamehash}{01eb907fe4f9429b911ea87887f73363}
+      \strng{authornamehash}{01eb907fe4f9429b911ea87887f73363}
+      \strng{authorfullhash}{01eb907fe4f9429b911ea87887f73363}
+      \strng{authorfullhashraw}{01eb907fe4f9429b911ea87887f73363}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{eprinttype}{arXiv}
+      \field{title}{Conflict-free Replicated Data Types: An Overview}
+      \field{year}{2018}
+      \verb{eprint}
+      \verb 1806.10254
+      \endverb
+    \endentry
+    \entry{shapiro2011conflict}{inproceedings}{}{}
+      \name{author}{4}{}{%
+        {{hash=f13a03ea8c9e34968f9bc55bb4e93d9f}{%
+           family={Shapiro},
+           familyi={S\bibinitperiod},
+           given={Marc},
+           giveni={M\bibinitperiod}}}%
+        {{hash=01eb907fe4f9429b911ea87887f73363}{%
+           family={Preguiça},
+           familyi={P\bibinitperiod},
+           given={Nuno},
+           giveni={N\bibinitperiod}}}%
+        {{hash=0bb140bbbc1d3ac7ec6a28bd9d506581}{%
+           family={Baquero},
+           familyi={B\bibinitperiod},
+           given={Carlos},
+           giveni={C\bibinitperiod}}}%
+        {{hash=d091ed4cb7e2ab01f03d04bfcd52f83f}{%
+           family={Zawirski},
+           familyi={Z\bibinitperiod},
+           given={Marek},
+           giveni={M\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Grenoble, France}%
+      }
+      \list{publisher}{1}{%
+        {Springer-Verlag}%
+      }
+      \strng{namehash}{7936fce3a0285cdf6cd75bdb1ee0e5aa}
+      \strng{fullhash}{00bf62d46bf695019c2c8f76a176456a}
+      \strng{fullhashraw}{00bf62d46bf695019c2c8f76a176456a}
+      \strng{bibnamehash}{00bf62d46bf695019c2c8f76a176456a}
+      \strng{authorbibnamehash}{00bf62d46bf695019c2c8f76a176456a}
+      \strng{authornamehash}{7936fce3a0285cdf6cd75bdb1ee0e5aa}
+      \strng{authorfullhash}{00bf62d46bf695019c2c8f76a176456a}
+      \strng{authorfullhashraw}{00bf62d46bf695019c2c8f76a176456a}
+      \field{extraname}{1}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Replicating data under Eventual Consistency (EC) allows any replica to accept updates without remote synchronisation. This ensures performance and scalability in large-scale distributed systems (e.g., clouds). However, published EC approaches are ad-hoc and error-prone. Under a formal Strong Eventual Consistency (SEC) model, we study sufficient conditions for convergence. A data type that satisfies these conditions is called a Conflict-free Replicated Data Type (CRDT). Replicas of any CRDT are guaranteed to converge in a self-stabilising manner, despite any number of failures. This paper formalises two popular approaches (state- and operation-based) and their relevant sufficient conditions. We study a number of useful CRDTs, such as sets with clean semantics, supporting both add and remove operations, and consider in depth the more complex Graph data type. CRDT types can be composed to develop large-scale distributed applications, and have interesting theoretical properties.}
+      \field{booktitle}{Proceedings of the 13th International Conference on Stabilization, Safety, and Security of Distributed Systems}
+      \field{isbn}{9783642245497}
+      \field{series}{SSS'11}
+      \field{title}{Conflict-free replicated data types}
+      \field{year}{2011}
+      \field{pages}{386\bibrangedash 400}
+      \range{pages}{15}
+      \verb{doi}
+      \verb 10.1007/978-3-642-24550-3_29
+      \endverb
+      \keyw{replicated shared objects,large-scale distributed systems,eventual consistency}
+    \endentry
+    \entry{shapiro2011comprehensive}{report}{}{}
+      \name{author}{4}{}{%
+        {{hash=f13a03ea8c9e34968f9bc55bb4e93d9f}{%
+           family={Shapiro},
+           familyi={S\bibinitperiod},
+           given={Marc},
+           giveni={M\bibinitperiod}}}%
+        {{hash=01eb907fe4f9429b911ea87887f73363}{%
+           family={Preguiça},
+           familyi={P\bibinitperiod},
+           given={Nuno},
+           giveni={N\bibinitperiod}}}%
+        {{hash=0bb140bbbc1d3ac7ec6a28bd9d506581}{%
+           family={Baquero},
+           familyi={B\bibinitperiod},
+           given={Carlos},
+           giveni={C\bibinitperiod}}}%
+        {{hash=d091ed4cb7e2ab01f03d04bfcd52f83f}{%
+           family={Zawirski},
+           familyi={Z\bibinitperiod},
+           given={Marek},
+           giveni={M\bibinitperiod}}}%
+      }
+      \list{institution}{1}{%
+        {Inria -- Centre Paris-Rocquencourt ; INRIA}%
+      }
+      \strng{namehash}{7936fce3a0285cdf6cd75bdb1ee0e5aa}
+      \strng{fullhash}{00bf62d46bf695019c2c8f76a176456a}
+      \strng{fullhashraw}{00bf62d46bf695019c2c8f76a176456a}
+      \strng{bibnamehash}{00bf62d46bf695019c2c8f76a176456a}
+      \strng{authorbibnamehash}{00bf62d46bf695019c2c8f76a176456a}
+      \strng{authornamehash}{7936fce3a0285cdf6cd75bdb1ee0e5aa}
+      \strng{authorfullhash}{00bf62d46bf695019c2c8f76a176456a}
+      \strng{authorfullhashraw}{00bf62d46bf695019c2c8f76a176456a}
+      \field{extraname}{2}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{month}{1}
+      \field{number}{RR-7506}
+      \field{title}{{A comprehensive study of Convergent and Commutative Replicated Data Types}}
+      \field{type}{Research Report}
+      \field{year}{2011}
+      \field{pages}{50}
+      \range{pages}{1}
+      \verb{file}
+      \verb https://inria.hal.science/inria-00555588v1/file/techreport.pdf
+      \endverb
+      \verb{urlraw}
+      \verb https://inria.hal.science/inria-00555588
+      \endverb
+      \verb{url}
+      \verb https://inria.hal.science/inria-00555588
+      \endverb
+      \keyw{eventual consistency ; optimistic replication ; replicated data types ; distributed algorithms ; distributed systems ; Data replication ; commutative operations}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+
