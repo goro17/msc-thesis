@@ -194,38 +194,81 @@ any $a,b \in S$, $a < a \sqcup b$.
 The properties of a join semilattice are crucial in ensuring that, regardless of the
 order in which updates are merged, the result is always the same and represents a
 consistent "join" of the information from all replicas. Moreover, the guarantee of
-monotonicity ensures that replicas always "grow forward" through merge operations.
+monotonicity ensures that replicas always "grow forward" through merge operations, with
+respect to state mutation.
 
 \section{Taxonomy of CRDTs}
 
-The design and implementation of CRDTs primarily follows two distinct strategies for
-replication: \textit{state-based} and \textit{operation-based}
-\cite{shapiro2011comprehensive}.
+Before the introduction of a few relevant CRDT implementations in the following chapter,
+it is useful to provide a comprehensive taxonomy of CRDT designs, each with its distinct
+characteristics with respect to how replicas -- more precisely, updates among replicas --
+are synchronized. Fundamentally, these branch into one of two categories,
+\textit{state-based} or \textit{operation-based} CRDTs\cite{shapiro2011comprehensive},
+with a hybrid approach  -- \textit{delta state-based} CRDTs -- also being viable.
 
-\subsection{State-based CRDTs}
+\subsection{State-based CRDTs (CvRDTs)}
 
-State-based CRDTs, also known as convergent replicated data types (CvRDTs), operate on the
-principle of replicas exchanging their entire current state. When an update to a replica's
-state is issued, the replica first applies the update locally, and then broadcasts the
-resulting state to the other replicas. The replicas receiving the updated state apply a
-merge operation to combine the received state with their own local state. It is important
-to note that the merge operation is both commutative, associative, and idempotent. Thanks
-to these guarantees, updates can arrive in any order, and can arrive more than once. As
-long as all replicas receive the same updates, they will have an equivalent state.
+State-based CRDTs, also called convergent replicated data types (CvRDTs), operate on
+the principle of achieving convergence through propagation of entire states. The source
+replica receives an update and applies it locally, and the resulting state is then
+propagated to other replicas through a payload. Upon receiving a state, if a replica's
+local state and the received state conflict, a deterministic merge operation is applied,
+which leads to a new state that reflects the conflict resolution. The overall process
+can be described as follows.
+
+\begin{enumerate}
+    \item A client invokes an update on a source replica.
+    \item The update immediately modifies the local state.
+    \item The modified state is asynchronously propagated to other replicas.
+    \item Replicas receive the modified state and merge it with their own local state.
+\end{enumerate}
+
+As states can be propagated in many ways -- for example, employing an epidemic propagation
+algorithm to an unknown set of participants \cite{demers1987epidemic} -- and be delivered
+to replicas in any order, the merge operation must be compliant with the constraints
+already discussed above -- it must be commutative, associative, idempotent, and
+monotonic. Thus, for this approach to work, the replica state must be a join semilattice.
 
 \subsection{Operation-based CRDTs (CmRDTs)}
-Operation-based CRDTs, also known as commutative replicated data types (CmRDTs), take a
-different approach. Instead of transmitting the entire updated state, replicas broadcast
-the update \textit{operations} themselves as they occur locally. These operations are then
-applied locally by the receiving replicas. For CmRDTs to ensure convergence, the operations
-must be designed to enforce causal order when applied concurrently. This means that
-op-based CRDTs need a deterministic mechanism to determine the order of concurrent
-messages.
 
-\subsection{Delta State-based CRDTs}
-A significant optimization, particularly for state-based CRDTs, is the concept of
-delta-state CRDTs (\textit{$\delta$-CRDTs}). Instead of transmitting the entire state,
-$\delta$-CRDTs only need to transmit the incremental changes (or \textit{deltas}) that have
-occurred since the last state update. These deltas are then merged at the receiving
-replicas. This approach overcomes the limitations of state-based replication, which can
-often be computationally expensive if the state object to transmit is large in size.
+Operation-based CRDTs, also called commutative replicated data types (CmRDTs), take a
+different approach with respect to state-based replication. as the name suggests,
+op-based CRDTs rely on achieving convergence by propagating operations to replicas,
+rather than propagating entire states.
+
+The process of op-based replication is typically subdivided into two phases.
+
+\begin{enumerate}
+    \item A \textit{"prepare"} phase, where the update is firstly applied to the source
+        replica.
+    \item An \textit{"effect"} phase, where the operations which form the update are
+        asynchronously propagated and executed on other replicas.
+\end{enumerate}
+
+In order for convergence to occur, a reliable messaging channel must be adopted, which
+complies with the constraints dictated by the CmRDT. For instance, operations are, in
+general, not idempotent, which implies the adoption of an exactly-once messaging
+mechanism. Furthermore, op-based replication typically occurs through causal broadcast
+mechanisms \cite{birman1987reliable}, which leads to two or more operations which are
+causally dependent to each other to be viewed in the correct order. While CmRDTs are
+more complex in design, they provide greater expressive power
+\cite{shapiro2011comprehensive}.
+
+\subsection{Delta State CRDTs ($\delta$-CRDTs)}
+
+While state-based and operation-based CRDTs are both successfull in achieving SEC
+guarantees, a third approach has also emerged in literature which addresses the
+drawbacks of the previous two approaches. On one hand, state-based CRDTs may be
+inefficient when the state object is large in size, affecting the bandwidth of the
+network. On the other hand, operation-based CRDTs heavily rely on the design of
+complex propagation channels that require the guarantees of reliable and causal
+communication. \textit{Delta State CRDTs} -- also commonly notated as $\delta$-CRDTs --
+evolve from both state-based and operation-based CRDTs. They rely on adopting a simple,
+unreliable propagation channel (state-based replication) for the dissemination of
+messages that are small in size and of incremental nature (operation-based replication)
+\cite{almeida2014efficient}.
+
+While traditional state-based CRDTs rely on issuing state changes via mutator functions
+that return the entire modified state, $\delta$-CRDTs rely on \textit{$\delta$-mutators}
+which return a value -- or \textit{delta} -- reflecting the incremental changes. The
+delta is then propagated and merged with remote replicas to achieve convergence.

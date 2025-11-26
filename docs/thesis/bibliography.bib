@@ -254,20 +254,49 @@ keywords = {Large-Scale Distributed Storage}
   hal_version = {v1},
 }
 
-@inproceedings{kleppmann2019local,
-author = {Kleppmann, Martin and Wiggins, Adam and van Hardenberg, Peter and McGranaghan, Mark},
-title = {Local-first software: you own your data, in spite of the cloud},
-year = {2019},
-isbn = {9781450369954},
+@inproceedings{demers1987epidemic,
+author = {Demers, Alan and Greene, Dan and Hauser, Carl and Irish, Wes and Larson, John and Shenker, Scott and Sturgis, Howard and Swinehart, Dan and Terry, Doug},
+title = {Epidemic algorithms for replicated database maintenance},
+year = {1987},
+isbn = {089791239X},
 publisher = {Association for Computing Machinery},
 address = {New York, NY, USA},
-url = {https://doi.org/10.1145/3359591.3359737},
-doi = {10.1145/3359591.3359737},
-abstract = {Cloud apps like Google Docs and Trello are popular because they enable real-time collaboration with colleagues, and they make it easy for us to access our work from all of our devices. However, by centralizing data storage on servers, cloud apps also take away ownership and agency from users. If a service shuts down, the software stops functioning, and data created with that software is lost. In this article we propose local-first software, a set of principles for software that enables both collaboration and ownership for users. Local-first ideals include the ability to work offline and collaborate across multiple devices, while also improving the security, privacy, long-term preservation, and user control of data. We survey existing approaches to data storage and sharing, ranging from email attachments to web apps to Firebase-backed mobile apps, and we examine the trade-offs of each. We look at Conflict-free Replicated Data Types (CRDTs): data structures that are multi-user from the ground up while also being fundamentally local and private. CRDTs have the potential to be a foundational technology for realizing local-first software. We share some of our findings from developing local-first software prototypes at the Ink \& Switch research lab over the course of several years. These experiments test the viability of CRDTs in practice, and explore the user interface challenges for this new data model. Lastly, we suggest some next steps for moving towards local-first software: for researchers, for app developers, and a startup opportunity for entrepreneurs.},
-booktitle = {Proceedings of the 2019 ACM SIGPLAN International Symposium on New Ideas, New Paradigms, and Reflections on Programming and Software},
-pages = {154–178},
-numpages = {25},
-keywords = {peer-to-peer communication, mobile computing, data ownership, collaboration software, CRDTs},
-location = {Athens, Greece},
-series = {Onward! 2019}
+doi = {10.1145/41840.41841},
+booktitle = {Proceedings of the Sixth Annual ACM Symposium on Principles of Distributed Computing},
+pages = {1–12},
+numpages = {12},
+location = {Vancouver, British Columbia, Canada},
+series = {PODC '87}
 }
+
+@article{birman1987reliable,
+author = {Birman, Kenneth P. and Joseph, Thomas A.},
+title = {Reliable communication in the presence of failures},
+year = {1987},
+issue_date = {Feb. 1987},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {5},
+number = {1},
+issn = {0734-2071},
+doi = {10.1145/7351.7478},
+journal = {ACM Trans. Comput. Syst.},
+month = jan,
+pages = {47–76},
+numpages = {30}
+}
+
+@article{almeida2014efficient,
+  author       = {Almeida, Paulo S{\'{e}}rgio and Shoker, Ali and Baquero, Carlos},
+  title        = {Efficient State-based CRDTs by Delta-Mutation},
+  journal      = {CoRR},
+  volume       = {abs/1410.2803},
+  year         = {2014},
+  doi          = {10.48550/arXiv.1410.2803},
+  eprinttype   = {arXiv},
+  eprint       = {1410.2803},
+  timestamp    = {Mon, 13 Aug 2018 16:46:19 +0200},
+  biburl       = {https://dblp.org/rec/journals/corr/AlmeidaSB14.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
