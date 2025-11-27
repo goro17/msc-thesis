@@ -1,43 +1,19 @@
-\chapter{Principles of Local-First Software}
+\chapter{Survey of common CRDT implementation and frameworks}
 
-\section{Defining Local-First Software}
-Advancements in modern distributed systems have led to the development of applications that
-function predominantly "on the cloud". These types of applications, such as Google
-Docs\footnote{\url{https://docs.google.com/}} or
-Trello\footnote{\url{https://trello.com/it}}, usually require a strong dependency on a
-centralized authority (usually assumed by one or more remote servers) to handle concurrent
-data transformations. Users often benefit from these applications for their capability to
-store data --- documents, presentations, spreadsheets, etc. --- that can then be accessed
-from multiple devices, and often sharing this same data with other users.
+\section{Register}
 
-As the user's request to access their data on the cloud passes through remote servers, one
-could question the degree of ownership assumed by the user over their data, as such
-ownership is oftentimes "shared" with the cloud provider who is hosting the same
-data\footnote{
-    A well-known colloquial phrase, often cited in popular culture to demistify cloud
-    computing, states that "There is no cloud, it's just someone else's computer."
-    \url{https://www.chriswatterston.com/article/success-of-my-there-is-no-cloud-sticker}
-}. In addition, cloud-centric applications introduce several drawbacks from the user's
-standpoint. For instance, applications may become unusable offline, and performance could be
-dictated by network latency.
+\section{Counter}
 
-An ongoing trend in software development has emerged in recent years and has posed itself in
-direct contrast to the traditional cloud-based architectures. A novel set of principles,
-which falls under the name of \textit{"local-first software"}, favors a more user-centric
-approach to software design by prioritizing storing and processing data directly on
-the user's device, with remote servers typically relegated to roles such as syncrhonization
-facilitators or backup providers \cite{kleppmann2019local}. Aside from this approach
-resulting in immediate access to the data and lower latency, local-first applications allow
-users to have complete control over their data, and to not depend on network connectivity to
-operate the application itself.
+\section{Set}
 
-\subsection{Key Benefits of Local-First Software}
-\begin{itemize}
-    \item \textbf{Offline Access}
-    \item \textbf{Lower Latency}
-    \item \textbf{Complete Ownership}
-    \item \textbf{Ubiquitous Access}
-    \item \textbf{Resilience}
-\end{itemize}
+\section{Map}
 
-\section{The Role of CRDTs in Local-First Software}
+\section{List}
+
+\section{Frameworks}
+
+\subsection{Yjs}
+
+\subsection{Automerge}
+
+
