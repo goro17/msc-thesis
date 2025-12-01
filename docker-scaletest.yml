@@ -34,7 +34,7 @@ services:
       - PYTHONBUFFERED=1
       - IS_CONTAINER=true
     deploy:
-      replicas: 8
+      replicas: 16
     volumes:
       - /etc/localtime:/etc/localtime
       - ./crdtsign/core/tests/artifacts:/app/tests/artifacts
