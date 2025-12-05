@@ -1,16 +1,362 @@
 \chapter{Survey of common CRDT implementation and frameworks}
 
-\section{Register}
+This chapter provides a systematic survey of Conflict-free Replicated Data Type (CRDT)
+implementations documented in academic literature, examining how fundamental data
+structures—registers, counters, sets, maps, and lists—achieve Strong Eventual Consistency
+(SEC) through mathematical properties. The analysis proceeds from atomic data types to
+complex collaborative structures, demonstrating how each implementation satisfies the
+formal requirements for convergence. The chapter concludes with an examination of
+production-grade CRDT frameworks (Automerge and Yjs) and their underlying algorithmic
+foundations, bridging theoretical formulations with practical distributed systems
+engineering.
 
-\section{Counter}
+\section{Registers}
 
-\section{Set}
+\subsection{Last-Write-Wins Register (LWW-Register)}
 
-\section{Map}
+The LWW-Register represents the simplest CRDT implementation, maintaining a single value
+with an associated timestamp. Each replica stores a tuple $(\text{value},
+\text{timestamp})$ where updates carry both the new value and a logical or physical
+timestamp.
 
-\section{List}
+\subsubsection{SEC Compliance Mechanism}
 
-\section{Frameworks}
+\textit{State-based approach}: The merge operation compares timestamps and retains the
+value with the maximum timestamp: $\text{merge}(s_1, s_2) = \text{max}(
+s_1.\text{timestamp}, s_2.\text{timestamp})$. This forms a semilattice where the partial
+order is defined by timestamp comparison, ensuring deterministic convergence regardless
+of message delivery order.
+
+\textit{Mathematical property}: The merge function is commutative, associative, and
+idempotent, satisfying CvRDT requirements.
+
+\textit{Trade-off}: Concurrent writes with identical timestamps require a deterministic
+tie-breaking mechanism (e.g., replica ID comparison), resulting in last-write-wins
+semantics that may discard concurrent updates.
+
+\subsection{Multi-Value Register (MV-Register)}
+
+To preserve concurrent writes rather than arbitrarily discarding them, the MV-Register
+maintains a set of values with their associated causal contexts (vector clocks or
+version vectors).
+
+\subsubsection{SEC Compliance Mechanism}
+
+\textit{Causal ordering}: Each value is tagged with a version vector representing its
+causal history. Updates increment the local replica's counter in the version vector.
+
+\textit{Merge operation}: The merge combines values by retaining all causally concurrent
+versions (those with incomparable version vectors) and discarding values that are
+causally dominated.
+
+\textit{Convergence guarantee}: The version vector lattice ensures that all replicas
+converge to the same set of concurrent values, preserving causality while exposing
+conflicts to application-level resolution.
+
+\section{Counters}
+
+\subsection{Grow-only Counter (G-Counter)}
+
+The G-Counter implements a monotonically increasing distributed counter by maintaining a
+vector of per-replica counts.
+
+\subsubsection{SEC Compliance Mechanism}
+
+\textit{State representation}: Each replica $i$ maintains a vector $V[1..n]$ where $V[i]$
+represents the local increment count and $V[j]$ (for $j \neq i$) represents the last
+known count from replica $j$.
+
+\textit{Increment operation}: $\text{increment}$() increases only the local replica's
+entry: $V[i] := V[i] + 1$.
+
+\textit{Merge operation}: Component-wise maximum across vectors: $\text{merge}(V_1,
+V_2)[i] = max(V_1[i], V_2[i])$ for all $i$.
+
+\textit{Query operation}: The global counter value is the sum of all vector components:
+$\text{value}() = \sum_i V[i]$.
+
+\textit{Lattice properties}: The component-wise maximum operation forms a
+join-semilattice over integer vectors, ensuring monotonic convergence. The merge is
+commutative, associative, and idempotent.
+
+\subsection{Positive-Negative Counter (PN-Counter)}
+
+To support both increments and decrements, the PN-Counter combines two G-Counters.
+
+\subsubsection{SEC Compliance Mechanism}
+
+\textit{State representation}: Maintains two vectors $P[1..n]$ (increments) and $N[1..n]$
+(decrements).
+
+\textit{Operations}:
+\begin{enumerate}
+    \item $\text{increment}()$ updates $P[\text{local_id}]$
+    \item $\text{decrement}()$ updates $N[\text{local_id}]$
+\end{enumerate}
+
+\textit{Merge operation}: Independently merges P and N vectors using component-wise
+maximum.
+
+\textit{Query operation}: $\text{value}() = \sum_i P[i] - \sum_i N[i]$.
+
+\textit{Convergence proof}: Since both P and N are G-Counters (monotonic semilattices),
+their composition inherits SEC properties. The merge operation on the product lattice
+ensures convergence.
+
+\section{Sets}
+
+\subsection{Grow-Only Set (G-Set)}
+The G-Set permits only element additions, representing the simplest set CRDT.
+
+\subsubsection{SEC Compliance Mechanism}
+
+\textit{State representation}: A set $S$ of elements.
+
+\textit{Add operation}: $\text{add}(e)$ computes $S := S \cup {e}$.
+
+\textit{Merge operation}: Set union $\text{merge}(S_1, S_1) = S_1 \cup S_2$.
+
+\textit{Lattice structure}: Set union forms a join-semilattice under set inclusion
+($\subseteq$), where union is the least upper bound operation. Commutativity and
+idempotence are immediate from set theory properties.
+
+\subsection{Two-Phase Set (2P-Set)}
+The 2P-Set extends G-Set with removal capability by maintaining separate added and
+removed sets.
+
+\subsubsection{SEC Compliance Mechanism}
+
+\textit{State representation}: Two G-Sets: $A$ (added elements) and $R$ (removed
+elements).
+
+\textit{Operations}:
+
+\begin{itemize}
+    \item $\text{add}(e)$ adds to $A$: $A := A \cup {e}$
+    \item $\text{remove}(e)$ adds to $R$ if $e \in A$: $R := R \cup {e}$
+\end{itemize}
+
+\textit{Membership query}: $e \in set \Leftrightarrow e \in A \wedge e \notin R$ (removed
+elements dominate).
+
+\textit{Merge operation}: Independently merge $A$ and $R$ using set union.
+
+\textit{Convergence}: Both $A$ and $R$ are G-Sets (monotonic semilattices), and their
+product forms a semilattice. The semantic rule "removed dominates added" provides
+deterministic convergence.
+
+\text{Limitation}: Elements cannot be re-added after removal (tombstone accumulation).
+
+\subsection{Last-Write-Wins Element Set (LWW-Element-Set)}
+
+To enable repeated add/remove cycles, the LWW-Element-Set associates timestamps with
+operations.
+
+\subsubsection{SEC Compliance Mechanism}
+
+\textit{State representation}:
+
+\begin{itemize}
+    \item $A$: Map from elements to add-timestamps
+    \item $R$: Map from elements to remove-timestamps
+\end{itemize}
+
+\textit{Operations}:
+
+\begin{itemize}
+    \item $\text{add}(e, t)$ updates $A[e] := t$
+    \item $\text{remove}(e, t)$ updates $R[e] := t$
+\end{itemize}
+
+\textit{Membership query}: $e \in set \Leftrightarrow A[e] > R[e]$ (comparing timestamps,
+with tie-breaking favoring adds or removes based on bias specification).
+
+\textit{Merge operation}: For each element $e$, take maximum timestamps independently for
+$A$ and $R$.
+
+\textit{Convergence}: Timestamp comparison creates a total order (with tie-breaking),
+ensuring deterministic convergence through the max-semilattice structure.
+
+\subsection{Observed-Remove Set (OR-Set)}
+The OR-Set provides add-wins semantics while preserving causality, avoiding the timestamp
+reliance of LWW-Element-Set.
+
+\subsubsection{SEC Compliance Mechanism}
+
+\textit{State representation}: Each element occurrence receives a unique identifier
+(UID). The set stores tuples (element, UID).
+
+\textit{Add operation}: add(e) generates a fresh unique tag $u$ and adds $(e, u)$ to the
+set.
+
+\textit{Remove operation}: $\text{remove}(e)$ removes all observed $(e, u)$ pairs for
+element $e$. The operation includes the specific UIDs to remove, ensuring causality
+preservation.
+
+\textit{Membership query}: $e \in set \Leftrightarrow \exists u : (e, u) \in set$.
+
+\textit{Merge operation}: Set union of all $(\text{element}, \text{UID})$ pairs.
+
+\textit{Convergence mechanism}: The unique tagging ensures that concurrent adds create
+distinct entries. Remove operations causally depend on prior add observations, preventing
+premature deletion. The monotonic growth of unique pairs (modulo causally-justified
+removals) ensures convergence.
+
+\textit{Causal consistency}: Remove operations are transmitted with the set of UIDs being
+removed, ensuring that only causally observed additions are deleted.
+
+\section{Maps}
+
+Map CRDTs compose key-value pairs where values are themselves CRDTs, enabling nested
+conflict resolution.
+
+\subsubsection{SEC Compliance Mechanism}
+
+\textit{State representation}: A mapping from keys to CRDT values:
+$M: \text{Key} \rightarrow \text{CRDTValue}$.
+
+\textit{Operations}:
+
+\begin{itemize}
+    \item $\text{update}(k, \text{operation})$ applies the specified CRDT operation to
+    $M[k]$
+    \item $\text{remove}(k)$ deletes the key (implementation-dependent semantics)
+\end{itemize}
+
+\textit{Merge operation}: For each key present in either replica:
+
+\begin{itemize}
+    \item If key exists in both: merge the CRDT values using their respective merge
+    functions
+    \item If key exists in only one replica: include that key-value pair (treating
+    absence as a bottom element in the lattice)
+\end{itemize}
+
+\textit{Convergence}: Since each value is a CRDT with its own convergence guarantee, and
+the merge operates key-wise, the composite structure inherits SEC properties. The map
+structure forms a product lattice over the individual value lattices.
+
+\textit{Nested composition}: Maps can contain other maps, counters, sets, etc., creating
+arbitrarily complex convergent structures.
+
+\textit{Remove Semantics Variants}:
+
+\begin{itemize}
+    \item \textit{LWW-Map}: Associates timestamps with key presence/absence
+    \item \textit{OR-Map}: Uses unique tokens for key-value pairs, analogous to OR-Set
+    \item \textit{RGA-Map}: Applies Replicated Growable Array semantics for ordered key
+    spaces
+\end{itemize}
+
+\section{Lists (Sequences)}
+
+List CRDTs present the most complex implementation challenge due to the necessity of
+preserving insertion order across concurrent edits.
+
+\subsection{Operation-based RGA (Replicated Growable Array)}
+
+\subsubsection{SEC Compliance Mechanism}
+
+\textit{State representation}: Each list element is assigned a unique identifier
+(typically a timestamp or logical clock value paired with replica ID). Elements are
+stored with explicit pointers to their predecessor element.
+
+\textit{Insert operation}: $\text{insert}(\text{value}, \text{after_id})$ creates a new
+element with a unique ID and links it after the element identified by $\text{after_id}$.
+The operation is broadcast with the value, new ID, and predecessor ID.
+
+\textit{Convergence strategy}:
+
+\begin{itemize}
+    \item \textit{Causal ordering}: The predecessor reference ensures causal dependency
+    -- an insert after element $X$ requires $X$ to exist.
+    \item \textit{Concurrent insert resolution}: When multiple elements are concurrently
+    inserted after the same predecessor, they are ordered deterministically by comparing
+    their unique IDs (e.g., lexicographically).
+    \textit{Commutativity}: Insert operations commute because the deterministic ordering
+    of concurrent inserts produces the same final sequence regardless of delivery order.
+\end{itemize}
+
+\textit{Tombstone mechanism}: Deletions mark elements as removed (tombstones) rather than
+physically deleting them, preserving the reference structure for future inserts.
+
+\subsection{WOOT (WithOut Operational Transformation)}
+
+\subsubsection{SEC Compliance Mechanism}
+
+\textit{State representation}: Each character has a unique ID formed by combining
+$(\text{site_id}, \text{logical_clock})$. Characters store both their previous and next
+character IDs, forming a linked structure.
+
+\textit{Insert operation}: To insert character $C$ between $A$ and $B$, the operation
+specifies $\text{insert}(C, \text{prev_id}=A, \text{next_id}=B)$. The insertion is valid
+only if $A$ appears before $B$ in the current sequence.
+
+\textit{Concurrent insert ordering}: When multiple characters are inserted between the
+same $A$ and $B$:
+
+\begin{itemize}
+    \item The algorithm uses the unique IDs to establish a total order among concurrent
+    inserts
+    \item Characters are positioned based on lexicographic comparison of their IDs
+\end{itemize}
+
+\textit{Convergence proof}: The algorithm maintains the invariant that the relative order
+of any two characters eventually stabilizes. The integration function is deterministic
+and produces the same ordering given the same set of operations.
+
+\subsection{Logoot}
+
+\subsubsection{SEC Compliance Mechanism}
+
+\textit{Position identifiers}: Instead of tombstones and predecessor references, Logoot
+assigns each element a position identifier from a dense total order (e.g., rational
+numbers or variable-length identifiers with base-N encoding).
+
+\textit{Insert operation}: To insert between positions $P_1$ and $P_2$, generate a new
+identifier $P$ such that $P_1 < P < P_2$. The density of the identifier space ensures
+this is always possible.
+
+\textit{Merge operation}: Sort all elements by their position identifiers. Since
+identifiers form a total order, all replicas converge to the same sequence.
+
+\textit{Concurrent insert handling}: Concurrent inserts between the same positions
+receive different identifiers (incorporating replica ID), which are then ordered
+deterministically.
+
+\textit{Advantages}: No tombstones required (deletions simply remove elements),
+simplifying garbage collection.
+
+\textit{Challenge}: Identifier length can grow over time with repeated insertions between
+the same positions (addressed in Logoot-Split and LSEQ variants).
+
+\subsection{Treedoc}
+
+\subsubsection{SEC Compliance Mechanism}
+
+\textit{Binary tree structure}: Elements are organized in a binary tree where in-order
+traversal yields the sequence. Each element's position is identified by its path in the
+tree.
+
+\textit{Insert operation}: New elements are inserted as children in the tree, with path
+disambiguation using replica IDs for concurrent inserts.
+
+\textit{Convergence}: The tree structure and deterministic path comparison ensure all
+replicas construct the same tree (and thus the same in-order traversal) given the same
+set of operations.
+
+\subsection{Differences between different Sequence CRDT implementations}
+
+\textit{RGA and WOOT}: Rely on tombstones to preserve causal structure; suitable for
+applications with moderate deletion rates
+
+\textit{Logoot family}: Avoid tombstones using dense position identifiers; better for
+high deletion rates but face identifier growth challenges
+
+\textit{Treedoc}: Tree-based approach balances memory and complexity; may require
+rebalancing strategies
+
+\section{Frameworks for general use}
 
 \subsection{Yjs}
 
