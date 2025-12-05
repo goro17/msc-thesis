@@ -89,10 +89,11 @@ To support both increments and decrements, the PN-Counter combines two G-Counter
 (decrements).
 
 \textit{Operations}:
-\begin{enumerate}
-    \item $\text{increment}()$ updates $P[\text{local_id}]$
-    \item $\text{decrement}()$ updates $N[\text{local_id}]$
-\end{enumerate}
+
+\begin{itemize}
+    \item $\text{increment}()$ updates $P[\text{local.id}]$
+    \item $\text{decrement}()$ updates $N[\text{local.id}]$
+\end{itemize}
 
 \textit{Merge operation}: Independently merges P and N vectors using component-wise
 maximum.
@@ -261,8 +262,8 @@ preserving insertion order across concurrent edits.
 (typically a timestamp or logical clock value paired with replica ID). Elements are
 stored with explicit pointers to their predecessor element.
 
-\textit{Insert operation}: $\text{insert}(\text{value}, \text{after_id})$ creates a new
-element with a unique ID and links it after the element identified by $\text{after_id}$.
+\textit{Insert operation}: $\text{insert}(\text{value}, \text{after.id})$ creates a new
+element with a unique ID and links it after the element identified by $\text{after.id}$.
 The operation is broadcast with the value, new ID, and predecessor ID.
 
 \textit{Convergence strategy}:
@@ -285,11 +286,11 @@ physically deleting them, preserving the reference structure for future inserts.
 \subsubsection{SEC Compliance Mechanism}
 
 \textit{State representation}: Each character has a unique ID formed by combining
-$(\text{site_id}, \text{logical_clock})$. Characters store both their previous and next
+$(\text{site.id}, \text{logical.clock})$. Characters store both their previous and next
 character IDs, forming a linked structure.
 
 \textit{Insert operation}: To insert character $C$ between $A$ and $B$, the operation
-specifies $\text{insert}(C, \text{prev_id}=A, \text{next_id}=B)$. The insertion is valid
+specifies $\text{insert}(C, \text{prev.id}=A, \text{next.id}=B)$. The insertion is valid
 only if $A$ appears before $B$ in the current sequence.
 
 \textit{Concurrent insert ordering}: When multiple characters are inserted between the
