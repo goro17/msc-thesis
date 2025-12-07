@@ -1,38 +1,47 @@
 \chapter{Survey of common CRDT implementation and frameworks}
 
 This chapter provides a systematic survey of Conflict-free Replicated Data Type (CRDT)
-implementations documented in academic literature, examining how fundamental data
-structures—registers, counters, sets, maps, and lists—achieve Strong Eventual Consistency
-(SEC) through mathematical properties. The analysis proceeds from atomic data types to
-complex collaborative structures, demonstrating how each implementation satisfies the
-formal requirements for convergence. The chapter concludes with an examination of
-production-grade CRDT frameworks (Automerge and Yjs) and their underlying algorithmic
-foundations, bridging theoretical formulations with practical distributed systems
-engineering.
+implementations documented in academic literature, examining how data structures of
+varying complexity —- registers, counters, sets, maps, lists -- are designed to achieve
+state convergence. Each data structure is supported by a set of semantics that model the
+system's behavior in the face of concurrent operations.
+
+We then conclude with an examination of a few production-grade CRDT frameworks tailored
+for general use, such as \textit{Automerge} and \textit{Yjs}, and illustrate their
+underlying algorithmic foundations, bridging theoretical formulations with practical
+distributed systems engineering. The latter will also constitute the backbone of the
+Proof-of-Concept we will discuss in the following chapter.
 
 \section{Registers}
 
-\subsection{Last-Write-Wins Register (LWW-Register)}
+A \textit{register} is an object that holds an opaque value, that supports a
+\textit{write} operation to update its value, and a \textit{read} operation to query it.
+Concurrent operations writing to the same register require safeguard measures to be
+adopted, which comes in the form of two rules, each supporting their own CRDT
+implementation, the \textit{Last-Writer-Wins Register} (LWW-Register) and the
+\textit{Multi-Value Register} (MV-Register) \cite{shapiro2011comprehensive}.
 
-The LWW-Register represents the simplest CRDT implementation, maintaining a single value
-with an associated timestamp. Each replica stores a tuple $(\text{value},
-\text{timestamp})$ where updates carry both the new value and a logical or physical
-timestamp.
+\subsection{Last-Writer-Wins Register (LWW-Register)}
 
-\subsubsection{SEC Compliance Mechanism}
+The LWW-Register represents the simplest form CRDT implementation. It is formed by a
+single value, with a timestamp associated to it; the timestamp's presence is due to how
+the \textit{last-writer-wins} rule is applied. Given two conflicting states $s_1$ and
+$s_2$ resulting from concurrent write operations, the CRDT's \textit{merge} operation is
+applied as follows: $$\text{merge}(s_1,s_2) = \text{max}(s_1\text{.timestamp},
+s_2\text{.timestamp})$$
 
-\textit{State-based approach}: The merge operation compares timestamps and retains the
-value with the maximum timestamp: $\text{merge}(s_1, s_2) = \text{max}(
-s_1.\text{timestamp}, s_2.\text{timestamp})$. This forms a semilattice where the partial
+The merge operation compares the timestamp from concurrent update and retains the
+state with the highest timestamp. This forms a semilattice where the partial
 order is defined by timestamp comparison, ensuring deterministic convergence regardless
-of message delivery order.
+of message delivery order. An example of state-based LWW-Register
+\cite{shapiro2011comprehensive} can be found in specification 0.
 
-\textit{Mathematical property}: The merge function is commutative, associative, and
-idempotent, satisfying CvRDT requirements.
-
-\textit{Trade-off}: Concurrent writes with identical timestamps require a deterministic
-tie-breaking mechanism (e.g., replica ID comparison), resulting in last-write-wins
-semantics that may discard concurrent updates.
+\begin{algorithm}
+    \caption{State-based LWW-Register}
+    \Input{Payload}
+    \Output{None}
+    
+\end{algorithm}
 
 \subsection{Multi-Value Register (MV-Register)}
 
