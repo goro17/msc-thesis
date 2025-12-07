@@ -25,91 +25,197 @@ implementation, the \textit{Last-Writer-Wins Register} (LWW-Register) and the
 
 The LWW-Register represents the simplest form CRDT implementation. It is formed by a
 single value, with a timestamp associated to it; the timestamp's presence is due to how
-the \textit{last-writer-wins} rule is applied. Given two conflicting states $s_1$ and
-$s_2$ resulting from concurrent write operations, the CRDT's \textit{merge} operation is
+the \textit{last-writer-wins} rule is applied. Given two conflicting states, $s_1$ and
+$s_2$, which are affected by concurrent updates, the CRDT's \textit{merge} operation is
 applied as follows: $$\text{merge}(s_1,s_2) = \text{max}(s_1\text{.timestamp},
 s_2\text{.timestamp})$$
 
-The merge operation compares the timestamp from concurrent update and retains the
-state with the highest timestamp. This forms a semilattice where the partial
-order is defined by timestamp comparison, ensuring deterministic convergence regardless
-of message delivery order. An example of state-based LWW-Register
-\cite{shapiro2011comprehensive} can be found in specification 0.
+\begin{algorithm}[tb]
+\caption{State-based Last-Writer-Wins Register (LWW-Register)}
+\label{alg:lww-register}
+\begin{algorithmic}[1]
+\State let state $s:=$ (value $x$, timestamp $t$)\Comment{initially $(\perp, 0)$}
 
-\begin{algorithm}
-    \caption{State-based LWW-Register}
-    
+\Procedure{update}{value $x'$}
+    \State $s.x = x'$
+    \State $s.t = now()$
+\EndProcedure
+\Procedure{query}{ }
+    \State\Return $s.x$
+\EndProcedure
+\Procedure{compare}{states $s$, $s''$}
+    \If{$s.t\leq s'.t$}
+        \State\Return true
+    \Else
+        \State\Return false
+    \EndIf
+\EndProcedure
+\Procedure{merge}{states $s$, $s'$}
+    \State let state $s'' := (\perp,0)$
+    \If{$s\leq s'$}\Comment{\Call{compare}{$s,s'$}}
+        \State $s''.x,s''.t = s'.x,s'.t$
+    \Else
+        \State $s''.x,s''.t = s.x,s.t$
+    \EndIf
+    \State\Return s''
+\EndProcedure
+\end{algorithmic}
 \end{algorithm}
+
+The merge operation compares the timestamp from each update and retains the
+replica with the highest timestamp. This forms a semilattice where the partial
+order is defined by timestamp comparison, ensuring deterministic convergence regardless
+of message delivery order. A high-level state-based LWW-Register
+\cite{shapiro2011comprehensive} implementation can be found in specification
+\ref{alg:lww-register}.
+
 
 \subsection{Multi-Value Register (MV-Register)}
 
-To preserve concurrent writes rather than arbitrarily discarding them, the MV-Register
-maintains a set of values with their associated causal contexts (vector clocks or
-version vectors).
+Made popular by Amazon's Dynamo \cite{decandia2007dynamo} key-value store, Multi-Value
+Register CRDTs take a different approach to concurrency with respect to the LWW-Register.
+Rather than discarding values based on their timestamp, MV-Registers maintain all
+concurrently written values. In this case, the payload is formed by a set
+$S$ of values, each with their associated causal context (e.g., vector clock or version
+vector).
 
-\subsubsection{SEC Compliance Mechanism}
+\begin{algorithm}[tb]
+\caption{State-based Multi-Value Register (MV-Register)}
+\label{alg:mv-register}
+\begin{algorithmic}[1]
+\State let state $s:=$ set $X$\Comment{
+    $X$: set of $(x, V)$ pairs of value $x$ and version vector $V$
+    (initially, $\{(\perp,[0,..,0])\}$)
+}
 
-\textit{Causal ordering}: Each value is tagged with a version vector representing its
-causal history. Updates increment the local replica's counter in the version vector.
+\Procedure{update}{set $R$}
+    \State let $V' :=$ \Call{increaseVersionVector}{ }
+    \State $s.X = R \times \{V'\}$
+\EndProcedure
+\Procedure{query}{ }
+    \State\Return $r.X$
+\EndProcedure
+\Procedure{compare}{sets $A$, $B$}
+    \If{$(\forall(x,V) \in A, (x',V') \in B: V \leq V')$}
+        \State\Return true
+    \Else
+        \State\Return false
+    \EndIf
+\EndProcedure
+\Procedure{merge}{sets $A$, $B$}
+    \State let $A' := \{(x,V)\in A|\forall(y,W)\in B: V||W \vee V \geq W\}$
+    \State let $B' := \{(y,W)\in B|\forall(x,V)\in A: W||V \vee W \geq V\}$
+    \State let $C := A \cup B$
+    \State\Return $C$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
-\textit{Merge operation}: The merge combines values by retaining all causally concurrent
-versions (those with incomparable version vectors) and discarding values that are
-causally dominated.
+As shown in specification \ref{alg:mv-register}, the \textit{query} operation returns a
+copy of the payload, while the \textit{update} operation overwrites it by associating the
+value to a "fresh" version vector that dominates all previous ones. The \textit{merge}
+operation returns the union. Compared to its LWW-Register counterpart, the \textit{merge}
+operation acts by preserving all concurrent values in the set
+\cite{shapiro2011comprehensive} -- in other words, a merge between two conflicting sets
+returns a union of every element in each input set whose version vector is not dominated
+by the one associated to an element in the other input set.
 
-\textit{Convergence guarantee}: The version vector lattice ensures that all replicas
-converge to the same set of concurrent values, preserving causality while exposing
-conflicts to application-level resolution.
 
 \section{Counters}
 
+A \textit{counter} is an integer object supporting both \textit{increment} and
+\textit{decrement} operations to update its value, and a \textit{read} operation to query
+the current value. Trivially, we can construct an operation-based counter CRDT in its
+simplest form by propagating update operations as-is. Given that both addition and
+subtraction operations commute, the delivery order of concurrent operations is
+irrelevant for achieving convergence \cite{shapiro2011comprehensive} -- as long as no
+overflow is caused by such operation.
+
 \subsection{Grow-only Counter (G-Counter)}
 
-The G-Counter implements a monotonically increasing distributed counter by maintaining a
-vector of per-replica counts.
+The simplest form of state-based counter CRDT is the \textit{G-Counter}, which only
+supports \textit{increment} operations. For this purpose, each replica $i$ maintains a
+vector $V[1..n]$, where $V[i]$ represents the local increment count and $V[j]$ (for
+$j \neq i$) represents the last known count from replica $j$
+\cite{shapiro2011comprehensive}. This implementation is shown in specification
+\ref{alg:g-counter}.
 
-\subsubsection{SEC Compliance Mechanism}
-
-\textit{State representation}: Each replica $i$ maintains a vector $V[1..n]$ where $V[i]$
-represents the local increment count and $V[j]$ (for $j \neq i$) represents the last
-known count from replica $j$.
-
-\textit{Increment operation}: $\text{increment}$() increases only the local replica's
-entry: $V[i] := V[i] + 1$.
-
-\textit{Merge operation}: Component-wise maximum across vectors: $\text{merge}(V_1,
-V_2)[i] = max(V_1[i], V_2[i])$ for all $i$.
-
-\textit{Query operation}: The global counter value is the sum of all vector components:
-$\text{value}() = \sum_i V[i]$.
-
-\textit{Lattice properties}: The component-wise maximum operation forms a
-join-semilattice over integer vectors, ensuring monotonic convergence. The merge is
-commutative, associative, and idempotent.
+\begin{algorithm}[tb]
+\caption{State-based Grow-only Counter (G-Counter)}
+\label{alg:g-counter}
+\begin{algorithmic}[1]
+\State let state $s:=$ vector $V[i_1,..,i_n]$ (where $n$: number of replicas)
+    \Comment{initally, $[0,..,0]$}
+\Procedure{increment}{ }
+    \State let $g := localID()$\Comment{$g$: source replica}
+    \State $V[g]=V[g]+1$
+\EndProcedure
+\Procedure{query}{ }
+    \State\Return $\sum_i V[i]$
+\EndProcedure
+\Procedure{compare}{vectors $X$, $Y$}
+    \If{$\forall i \in [0,n-1]: X[i] \leq Y[i]$}
+        \State\Return true
+    \Else
+        \State\Return false
+    \EndIf
+\EndProcedure
+\Procedure{merge}{vectors $X$, $Y$}
+    \State let vector $Z := [0,..,0]$
+    \State $\forall i \in [0,n-1]: Z[i] = \text{max}(X[i],Y[i])$
+    \State\Return Z
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Positive-Negative Counter (PN-Counter)}
 
-To support both increments and decrements, the PN-Counter combines two G-Counters.
+In effort to support decrement operations, the PN-Counter is designed by combining two
+G-Counters. This CRDT's implementation is therefore formed by a compound payload of two
+integer vectors, one to keep track of increments ($P$), while the other to keep track of
+decrements ($N$) \cite{shapiro2011comprehensive}.
 
-\subsubsection{SEC Compliance Mechanism}
+\begin{algorithm}[tb]
+\caption{State-based Positive-Negative Counter (PN-Counter)}
+\label{alg:pn-counter}
+\begin{algorithmic}[1]
+\State let state $s:=$ Payload $(P[i_1,..,i_n],N[i_1,..,i_n])$ (where $n$: number of replicas)
+    \Comment{initally, $([0,..,0],[0,..,0])$}
+\Procedure{increment}{ }
+    \State let $g := localID()$\Comment{$g$: source replica}
+    \State $P[g]=P[g]+1$
+\EndProcedure
+\Procedure{decrement}{ }
+    \State let $g := localID()$\Comment{$g$: source replica}
+    \State $N[g]=N[g]+1$
+\EndProcedure
+\Procedure{query}{ }
+    \State\Return $\sum_i P[i] - \sum_i N[i]$
+\EndProcedure
+\Procedure{compare}{payloads $X$, $Y$}
+    \If{
+        $\forall i \in [0,n-1]: X.P[i] \leq Y.P[i] 
+         \wedge \forall i \in [0,n-1]: X.N[i] \leq Y.N[i]$
+    }
+        \State\Return true
+    \Else
+        \State\Return false
+    \EndIf
+\EndProcedure
+\Procedure{merge}{payloads $X$, $Y$}
+    \State let payload $Z := ([0,..,0],[0,..,0])$
+    \State $\forall i \in [0,n-1]: Z.P[i] = \text{max}(X.P[i],Y.P[i])$
+    \State $\forall i \in [0,n-1]: Z.N[i] = \text{max}(X.N[i],Y.N[i])$
+    \State\Return Z
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
-\textit{State representation}: Maintains two vectors $P[1..n]$ (increments) and $N[1..n]$
-(decrements).
-
-\textit{Operations}:
-
-\begin{itemize}
-    \item $\text{increment}()$ updates $P[\text{local.id}]$
-    \item $\text{decrement}()$ updates $N[\text{local.id}]$
-\end{itemize}
-
-\textit{Merge operation}: Independently merges P and N vectors using component-wise
-maximum.
-
-\textit{Query operation}: $\text{value}() = \sum_i P[i] - \sum_i N[i]$.
-
-\textit{Convergence proof}: Since both P and N are G-Counters (monotonic semilattices),
-their composition inherits SEC properties. The merge operation on the product lattice
-ensures convergence.
+Specification \ref{alg:pn-counter} illustrates this state-based implementation, with
+\textit{increment} and \textit{decrement} operations affecting separate vectors of the
+state's payload. The \textit{query} operation returns the counter's value by computing
+the difference between the $P$ and $N$ vectors, while the \textit{merge} operation
+independently merges the two vectors using component-wise maximum.
 
 \section{Sets}
 
