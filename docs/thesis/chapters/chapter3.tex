@@ -30,7 +30,7 @@ $s_2$, which are affected by concurrent updates, the CRDT's \textit{merge} opera
 applied as follows: $$\text{merge}(s_1,s_2) = \text{max}(s_1\text{.timestamp},
 s_2\text{.timestamp})$$
 
-\begin{algorithm}[tb]
+\begin{algorithm}[bt!]
 \caption{State-based Last-Writer-Wins Register (LWW-Register)}
 \label{alg:lww-register}
 \begin{algorithmic}[1]
@@ -79,7 +79,7 @@ concurrently written values. In this case, the payload is formed by a set
 $S$ of values, each with their associated causal context (e.g., vector clock or version
 vector).
 
-\begin{algorithm}[tb]
+\begin{algorithm}[bt!]
 \caption{State-based Multi-Value Register (MV-Register)}
 \label{alg:mv-register}
 \begin{algorithmic}[1]
@@ -140,7 +140,7 @@ $j \neq i$) represents the last known count from replica $j$
 \cite{shapiro2011comprehensive}. This implementation is shown in specification
 \ref{alg:g-counter}.
 
-\begin{algorithm}[tb]
+\begin{algorithm}[bt!]
 \caption{State-based Grow-only Counter (G-Counter)}
 \label{alg:g-counter}
 \begin{algorithmic}[1]
@@ -175,7 +175,7 @@ G-Counters. This CRDT's implementation is therefore formed by a compound payload
 integer vectors, one to keep track of increments ($P$), while the other to keep track of
 decrements ($N$) \cite{shapiro2011comprehensive}.
 
-\begin{algorithm}[tb]
+\begin{algorithm}[bt!]
 \caption{State-based Positive-Negative Counter (PN-Counter)}
 \label{alg:pn-counter}
 \begin{algorithmic}[1]
@@ -215,81 +215,117 @@ Specification \ref{alg:pn-counter} illustrates this state-based implementation, 
 \textit{increment} and \textit{decrement} operations affecting separate vectors of the
 state's payload. The \textit{query} operation returns the counter's value by computing
 the difference between the $P$ and $N$ vectors, while the \textit{merge} operation
-independently merges the two vectors using component-wise maximum.
+independently merges the two vectors through component-wise maximum.
 
 \section{Sets}
 
-\subsection{Grow-Only Set (G-Set)}
-The G-Set permits only element additions, representing the simplest set CRDT.
+A \textit{set} is a container for an arbitrary number of elements. It provides updates
+in the form of \textit{add} and \textit{remove} operations, which respectively add or
+remove a given element to or from the set, plus a \textit{lookup} operation that checks
+whether a given element $e$ belongs to the set. Several concurrency semantics are viable
+in the presence of concurrent insertion and removal operations on the same element.
 
-\subsubsection{SEC Compliance Mechanism}
+\subsection{Grow-only Set (G-Set)}
+The simplest implementation of a set CRDT is to only permit \textit{add} operations,
+which is made possible by employing an union of all added elements. Since the union
+operation is commutative, the operation-based implementation naturally converges,
+regardless of delivery order \cite{shapiro2011comprehensive}.
 
-\textit{State representation}: A set $S$ of elements.
+\begin{algorithm}[bt!]
+\caption{State-based Grow-only Set (G-Set)}
+\label{alg:g-set}
+\begin{algorithmic}[1]
+\State let state $s:=$ set $A$\Comment{initally, $\varnothing$}
+\Procedure{add}{element $e$}
+    \State $A = A \cup \{e\}$
+\EndProcedure
+\Procedure{lookup}{element $e$}
+    \If{$(e \in A)$}
+        \State\Return true
+    \Else
+        \State\Return false
+    \EndIf
+\EndProcedure
+\Procedure{compare}{states $s$, $s'$}
+    \If{$s.A \subseteq s'.A$}
+        \State\Return true
+    \Else
+        \State\Return false
+    \EndIf
+\EndProcedure
+\Procedure{merge}{states $s$, $s'$}
+    \State let state $s'' := \varnothing$
+    \State $s''.A = s.A \cup s'.A$
+    \State\Return $s''$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
-\textit{Add operation}: $\text{add}(e)$ computes $S := S \cup {e}$.
-
-\textit{Merge operation}: Set union $\text{merge}(S_1, S_1) = S_1 \cup S_2$.
-
-\textit{Lattice structure}: Set union forms a join-semilattice under set inclusion
-($\subseteq$), where union is the least upper bound operation. Commutativity and
-idempotence are immediate from set theory properties.
+Specification \ref{alg:g-set} shows the state-based approach, where the \textit{add}
+operation modifies the local state through union. A partial order on some state $s$ and
+$s'$ can be defined as $s \leq s' \Leftrightarrow s \subseteq s'$. Conversely, the
+\textit{merge} operation between two states returns the union of their respective sets.
+The G-Set constitutes a basic building block of more complex implementations, such as the
+\textit{2P-Set}
 
 \subsection{Two-Phase Set (2P-Set)}
-The 2P-Set extends G-Set with removal capability by maintaining separate added and
-removed sets.
 
-\subsubsection{SEC Compliance Mechanism}
+The 2P-Set is an extension of the G-Set with removal capability. It is formed by
+combining two G-Sets, which are used to keep track of added and removed elements.
 
-\textit{State representation}: Two G-Sets: $A$ (added elements) and $R$ (removed
-elements).
+\begin{algorithm}[bt!]
+\caption{State-based Two-Phase Set (2P-Set)}
+\label{alg:2p-set}
+\begin{algorithmic}[1]
+\State let state $s:=$ sets $A,R$\Comment{initally, $\{\varnothing,\varnothing\}$}
+\Procedure{lookup}{element $e$}
+    \If{$(e \in A)$}
+        \State\Return true
+    \Else
+        \State\Return false
+    \EndIf
+\EndProcedure
+\Procedure{add}{element $e$}
+    \State $A = A \cup \{e\}$
+\EndProcedure
+\Procedure{remove}{element $e$}
+    \State \textbf{precondition} \Call{lookup}{$e$}
+    \State $R = R \cup \{e\}$
+\EndProcedure
+\Procedure{compare}{states $s$, $s'$}
+    \If{$s.A \subseteq s'.A \vee s.R \subseteq s'.R$}
+        \State\Return true
+    \Else
+        \State\Return false
+    \EndIf
+\EndProcedure
+\Procedure{merge}{states $s$, $s'$}
+    \State let state $s'' := \{\varnothing, \varnothing\}$
+    \State $s''.A = s.A \cup s'.A$
+    \State $s''.R = s.R \cup s'.R$
+    \State\Return $s''$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
 
-\textit{Operations}:
+Specification \ref{alg:2p-set} shows an example of a state-based 2P-Set implementation.
+Similar to what occurs with PN-Counters, the two G-Sets of the 2P-Set keep track
+separately of \textit{add} and \textit{remove} operations, and the \textit{merge}
+operation returns a new state resulting from the union of each set individually.
+It is worth noting that a critical issue may arise when a \textit{remove} operation is
+attempted for an element $e$ that does not currently exist in the set. As a consequence,
+the \textit{remove} operation requires -- as a precondition -- that $e$ already belongs
+to the set, before removing it.
 
-\begin{itemize}
-    \item $\text{add}(e)$ adds to $A$: $A := A \cup {e}$
-    \item $\text{remove}(e)$ adds to $R$ if $e \in A$: $R := R \cup {e}$
-\end{itemize}
+\subsection{Last-Writer-Wins element Set (LWW-element-Set)}
 
-\textit{Membership query}: $e \in set \Leftrightarrow e \in A \wedge e \notin R$ (removed
-elements dominate).
-
-\textit{Merge operation}: Independently merge $A$ and $R$ using set union.
-
-\textit{Convergence}: Both $A$ and $R$ are G-Sets (monotonic semilattices), and their
-product forms a semilattice. The semantic rule "removed dominates added" provides
-deterministic convergence.
-
-\text{Limitation}: Elements cannot be re-added after removal (tombstone accumulation).
-
-\subsection{Last-Write-Wins Element Set (LWW-Element-Set)}
-
-To enable repeated add/remove cycles, the LWW-Element-Set associates timestamps with
-operations.
-
-\subsubsection{SEC Compliance Mechanism}
-
-\textit{State representation}:
-
-\begin{itemize}
-    \item $A$: Map from elements to add-timestamps
-    \item $R$: Map from elements to remove-timestamps
-\end{itemize}
-
-\textit{Operations}:
-
-\begin{itemize}
-    \item $\text{add}(e, t)$ updates $A[e] := t$
-    \item $\text{remove}(e, t)$ updates $R[e] := t$
-\end{itemize}
-
-\textit{Membership query}: $e \in set \Leftrightarrow A[e] > R[e]$ (comparing timestamps,
-with tie-breaking favoring adds or removes based on bias specification).
-
-\textit{Merge operation}: For each element $e$, take maximum timestamps independently for
-$A$ and $R$.
-
-\textit{Convergence}: Timestamp comparison creates a total order (with tie-breaking),
-ensuring deterministic convergence through the max-semilattice structure.
+An alternative approach to the 2P-Set can be obtained by applying the
+\textit{last-writer-wins} semantic. Aside from having separate sets for keeping track of
+added and removed elements, each element has a timestamp associated to it. As a
+consequence, the \textit{lookup} operation ensures that a given element $e$ is in the set
+if it is in $A$ and it is not in $R$ with a higher timestamp
+\cite{shapiro2011comprehensive}:
+$$lookup(e) = \exists t, \forall t' > t: (e,t) \in A \wedge (e,t') \notin R$$
 
 \subsection{Observed-Remove Set (OR-Set)}
 The OR-Set provides add-wins semantics while preserving causality, avoiding the timestamp
