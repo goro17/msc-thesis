@@ -30,7 +30,7 @@ $s_2$, which are affected by concurrent updates, the CRDT's \textit{merge} opera
 applied as follows: $$\text{merge}(s_1,s_2) = \text{max}(s_1\text{.timestamp},
 s_2\text{.timestamp})$$
 
-\begin{algorithm}[bt!]
+\begin{algorithm}[b!]
 \caption{State-based Last-Writer-Wins Register (LWW-Register)}
 \label{alg:lww-register}
 \begin{algorithmic}[1]
@@ -328,32 +328,63 @@ if it is in $A$ and it is not in $R$ with a higher timestamp
 $$lookup(e) = \exists t, \forall t' > t: (e,t) \in A \wedge (e,t') \notin R$$
 
 \subsection{Observed-Remove Set (OR-Set)}
-The OR-Set provides add-wins semantics while preserving causality, avoiding the timestamp
-reliance of LWW-Element-Set.
 
-\subsubsection{SEC Compliance Mechanism}
+A more intuitive construction of set CRDT can be obtained by considering
+\textit{add-wins} semantics. Simply put, a situation in which an \textit{add} and a
+\textit{remove} operation on the same element $e$ occur concurrently results in the
+outcome of $e$ being in the set \cite{shapiro2011conflict} -- \textit{add($e$)} "wins"
+over \textit{remove($e$)}.
 
-\textit{State representation}: Each element occurrence receives a unique identifier
-(UID). The set stores tuples (element, UID).
+For the \textit{OR-Set}, this means that concurrency strictly depends on causal delivery.
+An operation that cancels another will cancel the operations in its causal past, but not
+the ones that are being concurrently issued \cite{almeida2024crdts}.
 
-\textit{Add operation}: add(e) generates a fresh unique tag $u$ and adds $(e, u)$ to the
-set.
+\begin{algorithm}
+    \floatname{specification}{Specification}
+    \caption{Op-based Observed-Remove Set (OR-Set)}\label{alg:or-set}
+    \begin{algorithmic}[1]
+        \State let state $s$ := set $S$ of pairs $(\text{element }e,\text{unique ID }U)$
+        \Comment{initially, $\varnothing$}
+        \Procedure{lookup}{element $e$}
+            \If{$\exists U: (e, U)\in S$}
+                \State\Return true
+            \Else
+                \State\Return false
+            \EndIf
+        \EndProcedure
+        \Procedure{add}{element $e$}
+            \State \textbf{prepare} ($e$)
+                \State\hspace{\algorithmicindent}
+                let $\alpha = unique()$\Comment{$unique()$ returns an unique ID}
+            \State \textbf{effect} ($e,\alpha$)
+                \State\hspace{\algorithmicindent}
+                $S = S \cup \{(e,\alpha)\}$
+        \EndProcedure
+        \Procedure{remove}{element $e$}
+            \State \textbf{prepare} ($e$) 
+                \State\hspace{\algorithmicindent}
+                \textbf{precondition} \Call{lookup}{$e$}
+                \State\hspace{\algorithmicindent}
+                let $R = \{(e,U)|\exists U: (e,U)\in S\}$
+            \State \textbf{effect}($R$)
+                \State\hspace{\algorithmicindent}
+                \textbf{precondition}
+                $\forall(e,U)\in R: add(e,U)\text{ has been delivered}$
+                \State\hspace{\algorithmicindent}
+                $S = S \setminus R$\Comment{remove pairs observed at source}
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
 
-\textit{Remove operation}: $\text{remove}(e)$ removes all observed $(e, u)$ pairs for
-element $e$. The operation includes the specific UIDs to remove, ensuring causality
-preservation.
+Specification \ref{alg:or-set} illustrates an op-based implementation of OR-Set CRDT,
+where the \textit{add} operation always ensures to add an element to the set associating
+it with a fresh unique identifier $U$. This ensures that the \textit{remove} operation is
+capable of retrieving all unique identifiers associated to the element $e$ which is
+target of removal -- more precisely, all the unique identifiers for the element $e$ that
+are causally observed at the source replica -- and issue removal for those specific
+entries, ensuring preservation of causality \cite{shapiro2011comprehensive}. The unique
+tagging ensures that concurrent adds create distinct entries.
 
-\textit{Membership query}: $e \in set \Leftrightarrow \exists u : (e, u) \in set$.
-
-\textit{Merge operation}: Set union of all $(\text{element}, \text{UID})$ pairs.
-
-\textit{Convergence mechanism}: The unique tagging ensures that concurrent adds create
-distinct entries. Remove operations causally depend on prior add observations, preventing
-premature deletion. The monotonic growth of unique pairs (modulo causally-justified
-removals) ensures convergence.
-
-\textit{Causal consistency}: Remove operations are transmitted with the set of UIDs being
-removed, ensuring that only causally observed additions are deleted.
 
 \section{Maps}
 
