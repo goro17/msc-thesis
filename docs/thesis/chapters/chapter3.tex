@@ -388,51 +388,63 @@ tagging ensures that concurrent adds create distinct entries.
 
 \section{Maps}
 
-Map CRDTs compose key-value pairs where values are themselves CRDTs, enabling nested
-conflict resolution.
+A \textit{map} is a data type that maps keys to objects. It typically provides a
+$put(k,o)$ operation to associate key $k$ to object $o$, and a $remove(k)$ operation to
+that removes the mapping for key $k$. Defining suitable concurrency semantics for maps is
+crucial, as decisions must be made regarding the outcome of concurrent \textit{put}
+operations for the same key, or concurrent \textit{remove} and \textit{put} operations on
+the same key \cite{preguiça2018conflict}.
 
-\subsubsection{SEC Compliance Mechanism}
+\subsection{Observed-Remove Map (OR-Map)}
 
-\textit{State representation}: A mapping from keys to CRDT values:
-$M: \text{Key} \rightarrow \text{CRDTValue}$.
+\begin{algorithm}[b!]
+    \floatname{specification}{Specification}
+    \caption{Op-based Observed-Remove Map (OR-Map)}\label{alg:or-map}
+    \begin{algorithmic}[1]
+        \State let state $s$ := set $S$ of triplets (key $k$, value $v$, unique ID $U$)
+        \Comment{initially, $\varnothing$}
+        \Procedure{put}{key $k$, value $v$}
+            \State \textbf{prepare} ($k,v$)
+                \State\hspace{\algorithmicindent}
+                let $\alpha = unique()$\Comment{$unique()$ returns an unique ID}
+                \State\hspace{\algorithmicindent}
+                let $R = \{(k',v',U')\in S | k'=k\}$
+            \State \textbf{effect} ($k,v,\alpha,R$)
+                \State\hspace{\algorithmicindent}
+                \textbf{precondition}
+                $\forall(k,v,U)\in R: put(k,v,U)\text{ has been delivered}$
+                \State\hspace{\algorithmicindent}
+                $S = (S \setminus R) \cup \{(k,v,\alpha)\}$
+                \Comment{Replace elements observed at source by new one}
+        \EndProcedure
+        \Procedure{remove}{key $k$}
+            \State \textbf{prepare} ($k$) 
+                \State\hspace{\algorithmicindent}
+                let $R = \{(k',v',U') \in S| k'=k\}$
+            \State \textbf{effect}($R$)
+                \State\hspace{\algorithmicindent}
+                \textbf{precondition}
+                $\forall(k,v,U)\in R: put(k,v,U)\text{ has been delivered}$
+                \State\hspace{\algorithmicindent}
+                $S = S \setminus R$\Comment{remove elements observed at source}
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
 
-\textit{Operations}:
-
-\begin{itemize}
-    \item $\text{update}(k, \text{operation})$ applies the specified CRDT operation to
-    $M[k]$
-    \item $\text{remove}(k)$ deletes the key (implementation-dependent semantics)
-\end{itemize}
-
-\textit{Merge operation}: For each key present in either replica:
-
-\begin{itemize}
-    \item If key exists in both: merge the CRDT values using their respective merge
-    functions
-    \item If key exists in only one replica: include that key-value pair (treating
-    absence as a bottom element in the lattice)
-\end{itemize}
-
-\textit{Convergence}: Since each value is a CRDT with its own convergence guarantee, and
-the merge operates key-wise, the composite structure inherits SEC properties. The map
-structure forms a product lattice over the individual value lattices.
-
-\textit{Nested composition}: Maps can contain other maps, counters, sets, etc., creating
-arbitrarily complex convergent structures.
-
-\textit{Remove Semantics Variants}:
-
-\begin{itemize}
-    \item \textit{LWW-Map}: Associates timestamps with key presence/absence
-    \item \textit{OR-Map}: Uses unique tokens for key-value pairs, analogous to OR-Set
-    \item \textit{RGA-Map}: Applies Replicated Growable Array semantics for ordered key
-    spaces
-\end{itemize}
+We can define a map CRDT with semantics similar to the ones already observed for OR-Sets.
+In this case, the payload is formed by a set of triplets (key $k$, value $v$, unique ID
+$U$). The $put(k,v)$ operation associates key $k$ to value $v$, tagging it with a fresh
+identifier. $remove(k)$ deletes all existing mappings associated to key $k$.
+Specification \ref{alg:or-map} shows an example of a naive op-based implementation
+\cite{shapiro2011comprehensive}, where the set of unique identifiers that are un-mapped
+in the $remove(k)$ operation are retrieved at the source replica.
 
 \section{Lists (Sequences)}
 
-List CRDTs present the most complex implementation challenge due to the necessity of
-preserving insertion order across concurrent edits.
+We will now discuss one of the most complex data types, which is the \textit{list} -- or
+\textit{sequence} -- which is essentially a set of elements which are placed in a
+precise order. Indeed, the challenge in designing a suitable CRDT for this structure is
+the necessity of preserving insertion order across concurrent edits.
 
 \subsection{Operation-based RGA (Replicated Growable Array)}
 
