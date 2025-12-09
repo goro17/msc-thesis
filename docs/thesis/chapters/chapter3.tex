@@ -443,35 +443,44 @@ in the $remove(k)$ operation are retrieved at the source replica.
 
 We will now discuss one of the most complex data types, which is the \textit{list} -- or
 \textit{sequence} -- which is essentially a set of elements which are placed in a
-precise order. Indeed, the challenge in designing a suitable CRDT for this structure is
-the necessity of preserving insertion order across concurrent edits.
+precise order. For this purpose, each element in the sequence is associated to a
+positional index, and the sequence is sorted according to that same index. Implementing a
+suitable CRDT for this type of structure poses a particular challenge, as insertion and
+deletion operations for an element affect the positioinal indices of other elements, and
+it is crucial to preserve ordering in the face of concurrent modifications.
 
-\subsection{Operation-based RGA (Replicated Growable Array)}
+\subsection{Replicated Growable Array (RGA)}
 
-\subsubsection{SEC Compliance Mechanism}
+The \textit{Replicated Growable Array} implements sequences in the form of a linked list.
+Each node of the list holds an element and an identifier associated to it, plus a
+reference to its parent node \cite{Roh2011RGA} -- i.e., the node after which it was
+inserted.
 
-\textit{State representation}: Each list element is assigned a unique identifier
-(typically a timestamp or logical clock value paired with replica ID). Elements are
-stored with explicit pointers to their predecessor element.
+Each element's identifier is assumed to be unique and ordered in line with causality
+\cite{shapiro2011comprehensive}. For this purpose, a typical identifier is modeled as a
+pair formed by a timestamp (e.g., vector clock) and the source replica's identifier.
+Namely, given two identifiers $i_1$ and $i_2$, respectively formed by tuples (timestamp
+$t_1$, unique ID $U_1$) and (timestamp $t_2$, unique ID $U_2$), $i_1$ is said to
+"precede" $i_2$ ($i_1 < i_2$) if $t_1 < t_2$ or if $t_1 = t_2 \wedge U_1 < U_2$
+\cite{Briot2016group}.
 
-\textit{Insert operation}: $\text{insert}(\text{value}, \text{after.id})$ creates a new
-element with a unique ID and links it after the element identified by $\text{after.id}$.
-The operation is broadcast with the value, new ID, and predecessor ID.
+This definition of precedence is crucial understanding concurrency semantics for
+\textit{insert} operations. In case of two concurrent insertions referencing the same
+parent node -- more precisely, two insertions both targeting the position immediately
+after the same node -- the logic applied at the remote replica is to place the element
+with the highest timestamp after the parent node, and the element with the lowest
+timestamp immediately after that.
 
-\textit{Convergence strategy}:
+As a practical example of this behavior, consider a system formed by two replicas, $A$
+and $B$, each maintaining a copy of an RGA. The initial state of both replicas is shown
+in [...] % TODO: continue example
 
-\begin{itemize}
-    \item \textit{Causal ordering}: The predecessor reference ensures causal dependency
-    -- an insert after element $X$ requires $X$ to exist.
-    \item \textit{Concurrent insert resolution}: When multiple elements are concurrently
-    inserted after the same predecessor, they are ordered deterministically by comparing
-    their unique IDs (e.g., lexicographically).
-    \textit{Commutativity}: Insert operations commute because the deterministic ordering
-    of concurrent inserts produces the same final sequence regardless of delivery order.
-\end{itemize}
-
-\textit{Tombstone mechanism}: Deletions mark elements as removed (tombstones) rather than
-physically deleting them, preserving the reference structure for future inserts.
+\textit{Delete} operations also require particular attention, since permanently deleting
+the same element is considered unsafe -- a concurrent insertion referencing a deleted
+node would be unable to correctly locate the insertion position. This can be solved by
+marking the target node with a \textit{tombstone} ($\perp$), rather than physically
+removing it. When materializing the CRDT's content at a user-facing site, nodes marked
+with a tombstone are skipped.
 
 \subsection{WOOT (WithOut Operational Transformation)}
 
