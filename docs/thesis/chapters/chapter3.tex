@@ -449,12 +449,17 @@ suitable CRDT for this type of structure poses a particular challenge, as insert
 deletion operations for an element affect the positioinal indices of other elements, and
 it is crucial to preserve ordering in the face of concurrent modifications.
 
+We will pay close attention to a few list CRDT implementations, as these are well versed
+to closely model structured documents in collaborative editing use cases -- and, as such,
+serve as a solid foundation to the CRDT frameworks that will be described near  the end
+of the chapter.
+
 \subsection{Replicated Growable Array (RGA)}
 
-The \textit{Replicated Growable Array} implements sequences in the form of a linked list.
-Each node of the list holds an element and an identifier associated to it, plus a
-reference to its parent node \cite{Roh2011RGA} -- i.e., the node after which it was
-inserted.
+The \textit{Replicated Growable Array} implements sequence objects in the form of a
+linked list. Each node of the list holds an element and an identifier associated to it,
+plus a reference to its parent node \cite{Roh2011RGA} -- i.e., the node after which it
+was inserted.
 
 Each element's identifier is assumed to be unique and ordered in line with causality
 \cite{shapiro2011comprehensive}. For this purpose, a typical identifier is modeled as a
@@ -464,16 +469,32 @@ $t_1$, unique ID $U_1$) and (timestamp $t_2$, unique ID $U_2$), $i_1$ is said to
 "precede" $i_2$ ($i_1 < i_2$) if $t_1 < t_2$ or if $t_1 = t_2 \wedge U_1 < U_2$
 \cite{Briot2016group}.
 
-This definition of precedence is crucial understanding concurrency semantics for
+This definition of precedence is crucial for understanding concurrency semantics for
 \textit{insert} operations. In case of two concurrent insertions referencing the same
 parent node -- more precisely, two insertions both targeting the position immediately
 after the same node -- the logic applied at the remote replica is to place the element
 with the highest timestamp after the parent node, and the element with the lowest
 timestamp immediately after that.
 
-As a practical example of this behavior, consider a system formed by two replicas, $A$
-and $B$, each maintaining a copy of an RGA. The initial state of both replicas is shown
-in [...] % TODO: continue example
+\begin{figure}[b!]
+    \centering
+    \includegraphics[width=0.61\linewidth]{diagram-rga.pdf}
+    \caption{Example of concurrent insertion in RGA}
+    \label{fig:diagram-rga}
+\end{figure}
+
+As a practical example of this behavior, consider a system formed by two replicas, with
+IDs $0$ and $1$ respectively. Suppose that an element identifier $i$ is denoted in the
+form $X.Y$, where $X$ is the operation's timestamp, and $Y$ is the source replica's ID.
+For the sake of simplicity, we will consider a set of characters as the payload for the
+CRDT. As shown in \autoref{fig:diagram-rga}, the initial state for both replicas is given
+by the sequence of characters $\{s,o,d\}$, with identifiers $1.0$, $2.0$, and $3.0$
+respectively. Replica $0$ issues operation $ins(2.0,n,4.0)$, while replica $1$ issues
+operation $ins(2.0,u,4.1)$. Since both replicas are concurrently attempting an insertion
+after character $o$ (identifier $2.0$), they are compared according to the positional
+identifier's precedence rules described before. Since $4.1 > 4.0$, this results in
+character $u$ being inserted before character $n$. As a consequence, the final state
+for both replicas is given by the sequence $\{s,o,u,n,d\}$.
 
 \textit{Delete} operations also require particular attention, since permanently deleting
 the same element is considered unsafe -- a concurrent insertion referencing a deleted
@@ -484,84 +505,57 @@ with a tombstone are skipped.
 
 \subsection{WOOT (WithOut Operational Transformation)}
 
-\subsubsection{SEC Compliance Mechanism}
+\textit{WOOT} takes a similar approach with respect to RGA. It aims to achieve
+consistency by enforcing correctness through \textit{causality}, \textit{convergence},
+and \textit{intention preservation} \footnote{Formally, \textit{intention preservation}
+means that any operation that has been applied at all replicas will have the same
+effects as if it were applied at the originating replica \cite{Sun1998Achieving}.}
+\cite{Oster2006WOOT}.
 
-\textit{State representation}: Each character has a unique ID formed by combining
-$(\text{site.id}, \text{logical.clock})$. Characters store both their previous and next
-character IDs, forming a linked structure.
+In this case, operations are denoted by the target position's adjacent neighbors --
+rather than by an absolute index or reference to a predecessor node, as it occurs in RGA.
+For instance, operation $ins(o_x,_y,o_z)$ inserts object $o_y$ after object $o_x$ and
+before object $o_x$.
 
-\textit{Insert operation}: To insert character $C$ between $A$ and $B$, the operation
-specifies $\text{insert}(C, \text{prev.id}=A, \text{next.id}=B)$. The insertion is valid
-only if $A$ appears before $B$ in the current sequence.
+While it is trivial to apply an insertion at the source replica, carefully designing the
+insertion integration algorithm at remote replicas represents the heart of WOOT.
+For example, suppose we have an ordered sequence of characters, and we would want to
+insert character $c$ between characters $c_p$ and $c_n$. The most trivial outcome is
+that no other concurrent insertions occur between $c_p$ and $c_n$, resulting in $c$ being
+inserted as-is. On the contrary, if two or more characters are inserted between $c_p$ and
+$c_n$, the insertion integration requires particular attention and evaluaiton of the
+subsequence of characters between $c_p$ and $c_n$, in order to compute a consistent
+placement for each character of the subsequence \cite{Oster2006WOOT}.
 
-\textit{Concurrent insert ordering}: When multiple characters are inserted between the
-same $A$ and $B$:
-
-\begin{itemize}
-    \item The algorithm uses the unique IDs to establish a total order among concurrent
-    inserts
-    \item Characters are positioned based on lexicographic comparison of their IDs
-\end{itemize}
-
-\textit{Convergence proof}: The algorithm maintains the invariant that the relative order
-of any two characters eventually stabilizes. The integration function is deterministic
-and produces the same ordering given the same set of operations.
+As it already occurs in RGA, $delete$ operations simply mark the target element with a
+tombstone, which requires no additional effort for integration at remote replicas.
 
 \subsection{Logoot}
 
-\subsubsection{SEC Compliance Mechanism}
+We now briefly describe another prominent sequence CRDT implementation, provided by the
+\textit{Logoot} algorithm. The basic idea is to use a lexicographic order to totally
+order the sequence elements \cite{Weiss2009Logoot}. Namely, Logoot employs a unique
+identifier allocation strategy, where each element in a sequence is assigned a dense,
+totally-ordered position identifier from an unbounded space. These identifiers are
+typically constructed in the form of variable-length lists of (integer index, replica ID)
+pairs, which enables the insertion of new characters between any two existing positions
+without reassigning existing identifiers.
 
-\textit{Position identifiers}: Instead of tombstones and predecessor references, Logoot
-assigns each element a position identifier from a dense total order (e.g., rational
-numbers or variable-length identifiers with base-N encoding).
+\section{Application Frameworks for general use}
 
-\textit{Insert operation}: To insert between positions $P_1$ and $P_2$, generate a new
-identifier $P$ such that $P_1 < P < P_2$. The density of the identifier space ensures
-this is always possible.
-
-\textit{Merge operation}: Sort all elements by their position identifiers. Since
-identifiers form a total order, all replicas converge to the same sequence.
-
-\textit{Concurrent insert handling}: Concurrent inserts between the same positions
-receive different identifiers (incorporating replica ID), which are then ordered
-deterministically.
-
-\textit{Advantages}: No tombstones required (deletions simply remove elements),
-simplifying garbage collection.
-
-\textit{Challenge}: Identifier length can grow over time with repeated insertions between
-the same positions (addressed in Logoot-Split and LSEQ variants).
-
-\subsection{Treedoc}
-
-\subsubsection{SEC Compliance Mechanism}
-
-\textit{Binary tree structure}: Elements are organized in a binary tree where in-order
-traversal yields the sequence. Each element's position is identified by its path in the
-tree.
-
-\textit{Insert operation}: New elements are inserted as children in the tree, with path
-disambiguation using replica IDs for concurrent inserts.
-
-\textit{Convergence}: The tree structure and deterministic path comparison ensure all
-replicas construct the same tree (and thus the same in-order traversal) given the same
-set of operations.
-
-\subsection{Differences between different Sequence CRDT implementations}
-
-\textit{RGA and WOOT}: Rely on tombstones to preserve causal structure; suitable for
-applications with moderate deletion rates
-
-\textit{Logoot family}: Avoid tombstones using dense position identifiers; better for
-high deletion rates but face identifier growth challenges
-
-\textit{Treedoc}: Tree-based approach balances memory and complexity; may require
-rebalancing strategies
-
-\section{Frameworks for general use}
-
-\subsection{Yjs}
+From an application development standpoint, while the CRDTs presented above are useful
+for a wide variety of situations -- with the main use case being collaborative editing 
+tasks -- their implementation in source code, along with the quirks of the data
+structures themselves and/or of the update communication protocol, can be particularly
+challenging. In recent years, a few frameworks have emerged and achieved notable success
+for providing a "toolbox" of CRDTs ready to use and to integrate in many applications.
+Two of the most prominent frameworks are \textit{Automerge} and \textit{Yjs}
+\cite{almeida2024crdts}, each of which uses a particular CRDT implementation from
+modern literature as a building block to construct more complex data structures. We will
+now introduce both of these frameworks, and illustrate the algorithmic foundations
+backing each of them.
 
 \subsection{Automerge}
 
+\subsection{Yjs}
 
