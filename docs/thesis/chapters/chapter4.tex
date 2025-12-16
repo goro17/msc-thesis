@@ -10,10 +10,36 @@ around that use case.
 
 \section{Defining the Use Case for the Proof-of-Concept}
 
-The traditional infrastructure behind the broad family of collaborative applications --
-e.g., editors such as the Google Docs suite, Dropbox, and many more -- keeps increasing
-in complexity, in order to accomodate an ever increasing number of users that make use of
-these systems over the World Wide Web. 
+The traditional infrastructure surrounding the broad family of collaborative applications
+-- e.g., Google Docs, OneDrive, and many more -- have constantly relied on centralized
+coordination paradigms, such as OT. While the approach of designating a central
+coordinator for conflict resolution offers distinct advantages -- primarily revolving
+around enabling near real-time, non-blocking collaboration and preserving the user's
+intention -- there are some contexts in which centralization may present significant
+drawbacks, mostly in terms of partition tolerance. For instance, the central coordinator
+may be put in a position to be the single point of failure; if it is unreachable, there
+is no other node that can approve or order changes, and the operativity of the entire
+system collapses\footnote{Some countermeasures can be adopted, such as implementing a
+leader election mechanism for designating a new central coordinator node among the nodes
+of the network. Nevertheless, this approach would introduce a further layer of complexity
+in the distributed system, and would require appropriate handling to enforce
+convergence.}.
+
+This precisely illustrates the fundamental advantage of decentralized, peer-to-peer (P2P)
+architectures based on CRDTs; through replication across multiple nodes, information is
+maintained with high availability and consistency -- i.e., compliant with SEC
+constraints. Furthermore, if one or more nodes of the system fail, the system's
+operativity is still guaranteed, as updates travel to all active nodes -- whereas the
+faulty nodes will reconcile with the system's consistent state, once they come back
+online. This approach eliminates the threat of a single point of failure that would
+compromise system-wide reliability.
+
+To illustrate this principle, we present a proof-of-concept implementation in the form of
+a replicated file storage system that leverages CRDTs to achieve eventual consistency
+without the need of centralized conflict resolution mechanisms. This system enables
+multiple users to execute fundamental file operations -- including file creation and
+deletion -- on a shared storage infrastructure. In order to rigorously check the
+	integrity of files that are shared over the neteork
 
 \subsection{Proof-of-Concept Scope and Boundaries}
 
