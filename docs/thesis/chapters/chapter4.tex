@@ -37,11 +37,19 @@ compromise system-wide reliability.
 To illustrate this principle, we present a proof-of-concept implementation in the form of
 a replicated file storage system that leverages CRDTs to achieve eventual consistency
 without the need of centralized conflict resolution mechanisms. This system enables
-multiple users to execute fundamental file operations -- including file creation and
-deletion -- on a shared storage infrastructure. In order to rigorously check the
-	integrity of files that are shared over the neteork
+multiple users to execute fundamental file operations -- including file sharing and
+deletion -- on a shared storage infrastructure. 
+
+Furthermore, the solution provides a \textit{file signature} mechanism, through which an
+unique user provides a secure method of certifying its ownership over the same file, and
+on-demand validity check over the signature can be requested by any other user.
+
+In the following sections, we will refer to the proof-of-concept by the name of
+\textit{CRDTSign}. 
 
 \subsection{Proof-of-Concept Scope and Boundaries}
+
+
 
 \subsection{User Story}
 
