@@ -49,9 +49,56 @@ In the following sections, we will refer to the proof-of-concept by the name of
 
 \subsection{Proof-of-Concept Scope and Boundaries}
 
+It is worth underlining that the solution developed through CRDTSign represents a toy
+implementation, rather than production-grade software. Its primary objective is to
+evaluate the capabilities of CRDTs in contemporary distributed peer-to-peer (P2P)
+systems. As such, several high-level requirements must be satisfied:
 
+\begin{itemize}
+	\item consistent with the principles of decentralized applications, the backend
+		logic is not centralized on a single node, but is served independently at each
+		participating node;
+	\item because CRDTSign aims to provide an example of modern collaborative software,
+		convergence among nodes must be achieved in near real-time -- to satisfy end-user
+		expectations for system responsiveness.
+\end{itemize}
+
+Conversely, given that the digital signature mechanism is integral to the solution --
+serving as a certificate of ownership for files shared by users -- the system must adopt
+a cryptographic signature scheme that ensures:
+
+\begin{itemize}
+	\item \textit{Integrity}: signatures cannot be altered without detection;
+	\item \textit{Authenticity}: the signer's identity can be verified;
+	\item \textit{Non-repudiation}: the signer cannot deny having signed the data.
+\end{itemize}
+
+As an additional requirement, the system adopts a data retention policy, which ensures
+that files whose creation timestamp exceeds a configurable interval -- e.g., 90 days --
+are automatically removed from the shared storage. This is made possible to prevent cases
+in which the storage's memory becomes saturated over time by files which are unused or
+obsolete.
+
+While the implemented solution satisfies these core requirements, certain architectural
+constraints limit its robustness. For instance, the P2P architecture was not constructed
+from the ground up; instead, it was abstracted through the use of a relay server. Rather
+than enabling direct node-to-node communication, all messages are routed through the
+relay server, which in turn broadcasts them to all peers -- thereby simulating a P2P
+environment. This design choice does not fundamentally compromise the decentralized
+nature of the system, as concurrency management logic remains managed across individual
+nodes, rather than being centralized within the relay server. Additionally, the CRDT data
+structure was sourced from an open-source library, and was not custom-made for this
+application. As we will discuss in the next chapter, a more robust and scalable solution
+could be achieved by designing a domain-specific CRDT structure and message exchange
+protocol tailored to the characteristics of the shared data.
 
 \subsection{User Story}
+
+We will now discuss several use cases of CRDTSign by describing the functionalities of
+the system that are available to the end-user.
+
+\paragraph{Uploading a file to storage}
+User A
 
 \section{Requirements Analysis}
 
