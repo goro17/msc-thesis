@@ -162,15 +162,15 @@ can distinguish between two kinds of node:
 	\item \textit{Regular node}: is in charge of accepting and handling the user
 		requests, employing both front-end and back-end logic. It is implemented through
 		an application written in the
-		\textit{Python}\footnote{\url{https://www.python.org/}} programming language,
+		\textit{Python}\footnote{https://www.python.org/} programming language,
 		which exposes a Web interface through which all of CRDTSign's core
 		functionalities are provided to the end-user. When triggered, each functionality
 		invokes a custom-made Python library which implements and executes the back-end
 		logic locally, interacting with suitable CRDT data structures when required.
 		These structures are implemented through
-		\textit{pycrdt}\footnote{\url{https://y-crdt.github.io/pycrdt/}}, a library that
+		\textit{pycrdt}\footnote{https://y-crdt.github.io/pycrdt/}, a library that
 		provides bindings to an open-source port of Yjs in the
-		\textit{Rust}\footnote{\url{https://rust-lang.org/}} programming language.
+		\textit{Rust}\footnote{https://rust-lang.org/} programming language.
 	\item \textit{Relay node}: the server in charge of broadcasting messages to regular
 		nodes. When a regular node sends an update to the relay node, the latter sends
 		the corresponding message to all other nodes that need to receive it.
@@ -251,7 +251,7 @@ for signature management, which is the primary implementation of the
 \textit{Edwards-curve Digital Signature Algorithm} (EdDSA) -- based on the
 \textit{SHA-512} hash function and the \textit{Curve25519} elliptic curve
 \cite{eddsa_rfc}. The Python implementation of Ed25519 is provided by the open-source
-\textit{cryptography} library\footonote{\url{https://github.com/pyca/cryptography}}.
+\textit{cryptography} library\footonote{https://github.com/pyca/cryptography}.
 Namely, the core payload of the Ed25519 implementation provided by this library is
 a 64 byte-sized cryptographic keypair -- made up of a private and a public key, both
 having a size of 32 bytes -- that can be associated to the specific user. The system
@@ -351,7 +351,7 @@ access the CRDT to obtain the correct public key to use in the validity check op
 Both the \texttt{FileSignatureStorage} and the \texttt{UserStorage} classes require
 connection with the relay server before any operation can be issued on their respective
 CRDT structures. This is possible thanks to a dedicated library,
-\textit{pycrdt-websocket}\footnote{\url{https://github.com/y-crdt/pycrdt-websocket}},
+\textit{pycrdt-websocket}\footnote{https://github.com/y-crdt/pycrdt-websocket},
 which extends the CRDT objects provided by the \textit{pycrdt} library with the
 possibility of broadcasting CRDT updates to an available WebSocket server. Thus, during
 their respective initialization phases, both the classes mentioned above start with a
@@ -370,7 +370,7 @@ File blobs that are placed in the CRDT key-value store employed by the
 \texttt{FileSignatureStorage} class are subject to custom serialization and
 deserialization procedures. For instance, the \textit{serialization} operation takes the
 target file's binary data as input, and applies the open-source \textit{LZ4} compression
-algorithm\footnote{\url{https://lz4.org/}} to the retrieved data. The output of the
+algorithm\footnote{https://lz4.org/} to the retrieved data. The output of the
 compression algorithm is the payload that is embedded as the target file's blob in the
 metadata saved inside the CRDT. Conversely, the \textit{deserialization} operation takes
 the file's blob as input, and decompresses it via the same LZ4 algorithm, returning the
@@ -379,7 +379,7 @@ original file's content as output.
 \subsection{Front-end}\label{sec:frontend}
 CRDTSign's \textt{api.py} module serves as the user's entry point to the application. Its
 main objective is to initialize an asynchronous RESTful API through the
-\textit{Quart}\footnote{\url{https://quart.palletsprojects.com/en/latest/#}} framework.
+\textit{Quart}\footnote{https://quart.palletsprojects.com/en/latest/#} framework.
 Namely, the API instantiates several endpoints that can be accessed by interacting with
 the components of the deployed Web application.
 
@@ -487,9 +487,9 @@ applied to the same objects.
 
 The underlying relay server logic is then made accessible to a known IP address and port
 the solution's local network by using the open-source
-\textit{Hypercorn}\footnote{\url{https://hypercorn.readthedocs.io/en/latest/}} library,
+\textit{Hypercorn}\footnote{https://hypercorn.readthedocs.io/en/latest/} library,
 which is used to deploy a standalone web server based on the
-ASGI\footnote{\url{https://github.com/django/asgiref/blob/main/specs/asgi.rst}}
+ASGI\footnote{https://github.com/django/asgiref/blob/main/specs/asgi.rst}
 (Asynchronous Server Gateway Interface) standard.
 
 \section{Production Deployment}
@@ -499,23 +499,23 @@ readiness for production environments, a few considerations have been made to be
 the deployment of the entire solution.
 
 For instance, the Python package that contains the software components described above
-was built using the open-source \textit{uv}\footnote{\url{https://docs.astral.sh/uv/}}
+was built using the open-source \textit{uv}\footnote{https://docs.astral.sh/uv/}
 package manager, which allowed for a seamless and efficient management of the required
 Python dependencies and of the build environment.
 
 The solution then uses the popular containerization engine
-\textit{Docker}\footnote{\url{https://www.docker.com/}} create lightweight, standalone
+\textit{Docker}\footnote{https://www.docker.com/} create lightweight, standalone
 containers used to deploy software components individually.
 
 \section{Development of the Complementary Mobile Application}
 
 As an addendum to the provided solution, a prototype mobile front-end application was
 developed to wrap around the present back-end logic. The application was written using
-the \textit{Flet} framework\footnote{\url{https://flet.dev/}}, which offers a simple
+the \textit{Flet} framework\footnote{https://flet.dev/}, which offers a simple
 environment for building mobile and web applications, using Python syntax to construct
 user interfaces. Software that is developed with Flet can be compiled using Flet's
 custom build system, which translates it into code that is supported by the open-source
-UI software development kit \textit{Flutter}\footnote{\url{https://flutter.dev/}}.
+UI software development kit \textit{Flutter}\footnote{https://flutter.dev/}.
 Flutter's capabilities are then leveraged to generate a package that can be executed --
 or installed -- on a wide variety of devices -- i.e., desktop operating systems such as
 Windows, Linux, or macOS, or mobile operating systems such as Android or iOS.
