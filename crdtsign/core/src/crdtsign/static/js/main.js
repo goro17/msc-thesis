@@ -101,7 +101,7 @@ async function loadSignatures() {
             if (data.signature) {
               showSignatureDetails(data.signature);
             } else {
-              alert("Error: Signature not found");
+              alert("Error: File not found");
             }
           })
           .catch((error) => {
@@ -135,7 +135,7 @@ function formatSignaturesTable(signatures) {
   if (signatures.length === 0) {
     tableBody.innerHTML = `
             <tr>
-                <td colspan="5" class="px-6 py-4 text-center text-gray-500">No signatures found</td>
+                <td colspan="5" class="px-6 py-4 text-center text-gray-500">No signed files found</td>
             </tr>
         `;
     return;
@@ -542,7 +542,7 @@ async function deleteSignature(signatureId) {
 
     if (response.ok) {
       closeDeleteModal();
-      alert("Signature deleted successfully");
+      alert("File deleted successfully");
       loadSignatures(); // Reload the signatures table
     } else {
       alert(`Error: ${data.error || "Unknown error"}`);

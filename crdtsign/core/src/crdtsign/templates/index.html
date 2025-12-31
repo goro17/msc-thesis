@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRDTSign - File Signature Manager</title>
+    <title>CRDTSign - Secure CRDT File Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg" />
@@ -39,16 +39,16 @@
             <div class="flex justify-center mb-2">
                 <img src="/static/images/logo.svg" alt="crdtsign Logo" class="h-16" />
             </div>
-            <p class="text-center text-gray-600">Secure File Signature Management</p>
+            <p class="text-center text-gray-600">Secure CRDT File Manager</p>
         </header>
 
         <!-- Tab Navigation -->
         <div class="flex justify-center mb-6">
             <nav class="flex space-x-4" aria-label="Tabs">
                 <button id="signatures-tab-btn" class="tab-button px-4 py-2 text-sm font-medium rounded-md bg-indigo-100 text-indigo-700"
-                        data-tab="signatures">Signatures</button>
+                        data-tab="signatures">Files</button>
                 <button class="tab-button px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700"
-                        data-tab="sign">Sign File</button>
+                        data-tab="sign">Upload File</button>
                 <button class="tab-button px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700"
                         data-tab="verify">Verify Signature</button>
             </nav>
@@ -56,7 +56,7 @@
 
         <!-- Signatures Tab -->
         <div id="signatures-tab" class="tab-content active bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-4">File Signatures</h2>
+            <h2 class="text-xl font-semibold mb-4">Signed Files</h2>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -69,18 +69,18 @@
                         </tr>
                     </thead>
                     <tbody id="signatures-table" class="bg-white divide-y divide-gray-200">
-                        <!-- Signatures will be loaded here -->
+                        <!-- Signed files will be loaded here -->
                         <tr>
-                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading signatures...</td>
+                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading files...</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Sign File Tab -->
+        <!-- Upload File Tab -->
         <div id="sign-tab" class="tab-content bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-4">Sign a File</h2>
+            <h2 class="text-xl font-semibold mb-4">Upload a File</h2>
             <form id="sign-form" class="space-y-4">
                 <div>
                     <label for="file-to-sign" class="block text-sm font-medium text-gray-700">Select File</label>
@@ -105,11 +105,11 @@
                     <label for="expiration-date" class="block text-sm font-medium text-gray-700">Expiration Date</label>
                     <input type="datetime-local" id="expiration-date" name="expiration_date"
                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                    <p class="mt-1 text-xs text-gray-500">Default is 10 minutes from now. Leave empty for no expiration.</p>
+                    <p class="mt-1 text-xs text-gray-500">Default value is 10 minutes from now. Leave empty for no expiration.</p>
                 </div>
                 <div>
                     <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Sign File
+                        Upload File
                     </button>
                 </div>
             </form>
@@ -149,12 +149,12 @@
         </div>
     </div>
 
-    <!-- Signature Details Modal -->
+    <!-- File Details Modal -->
     <div id="signature-details-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center hidden z-50">
         <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 overflow-hidden">
             <div class="px-6 py-4 bg-indigo-600">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-medium text-white">Signature Details</h3>
+                    <h3 class="text-lg font-medium text-white">File Details</h3>
                     <div class="flex items-center space-x-4">
                         <button id="download-btn" class="text-white hover:text-gray-200 focus:outline-none" title="Download">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -184,7 +184,7 @@
                         <p id="modal-signature" class="mt-1 text-sm text-gray-900 break-all font-mono"></p>
                     </div>
                     <div>
-                        <h4 class="text-sm font-medium text-gray-500">User ID</h4>
+                        <h4 class="text-sm font-medium text-gray-500">Signed by</h4>
                         <p id="modal-user-id" class="mt-1 text-sm text-gray-900"></p>
                     </div>
                     <div>
