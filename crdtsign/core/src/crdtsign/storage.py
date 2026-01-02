@@ -50,6 +50,7 @@ class FileSignatureStorage:
         self._connected = False
         self._ws_provider = None
         self._provider_task = None
+        self._change_callbacks = []  # Add callback methods on map change event (for testing)
 
         # Load state from file if requested
         if from_file:
@@ -154,12 +155,31 @@ class FileSignatureStorage:
                 self._connected = False
                 logger.info(f"[{self.room_name}] Client {self.client_id} disconnected.")
 
+    def append_change_callback(self, callback):
+        """Register a callback to be invoked when the map changes.
+        
+        Args:
+            callback: A function to call when changes occur.
+                     Will be called with the event parameter.
+        """
+        self._change_callbacks.append(callback)
+
     def _on_map_change(self, event):
         """Handle changes to the shared map."""
         logger.info(
             f"[{self.room_name}] Client {self.client_id} detected change."
         )
         asyncio.create_task(self._deferred_save_signatures())
+        
+        # Invoke all registered callbacks
+        for callback in self._change_callbacks:
+            try:
+                if asyncio.iscoroutinefunction(callback):
+                    asyncio.create_task(callback(event))
+                else:
+                    callback(event)
+            except Exception as e:
+                logger.error(f"Error in change callback: {e}")
 
     async def _deferred_save_signatures(self):
         """Deferred save operation to run outside observer callback context."""

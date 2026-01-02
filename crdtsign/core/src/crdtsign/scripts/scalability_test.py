@@ -6,7 +6,6 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-import websockets
 from loguru import logger
 
 from crdtsign.sign import get_file_hash, is_verified_signature, load_public_key, new_keypair, sign
@@ -138,81 +137,64 @@ async def scale_read():
     )
     logger.info("CRDT storage successfully initialized.")
 
-    await file_storage.connect()
-    await user_storage.connect()
-    logger.info("Connected to Sync Server.")
-
     metrics = {
         "node_type": user.username,
     }
 
+    # Use asyncio.Event to signal when files are received/removed
+    file_added = asyncio.Event()
+    file_removed = asyncio.Event()
+
+    # Register callback to detect when a file is added
+    def on_file_change(event):
+        """Callback triggered when the CRDT map changes."""
+        signatures = file_storage.get_signatures()
+        if len(signatures) > 0 and not file_added.is_set():
+            # A file was added
+            file_added.set()
+            logger.debug("CRDT add event detected")
+        elif len(signatures) == 0 and file_added.is_set() and not file_removed.is_set():
+            # The file was removed
+            file_removed.set()
+            logger.debug("CRDT remove event detected")
+
+    file_storage.append_change_callback(on_file_change)
+
+    await file_storage.connect()
+    await user_storage.connect()
+    logger.info("Connected to Sync Server.")
+
     async def receive_update():
-        uri = "ws://server:8765/file-signatures"
-        websocket = None
-        try:
-            # Increase max_size to 10MB to handle large CRDT updates
-            websocket = await websockets.connect(uri, max_size=1024 * 1024 * 10)
-            logger.info(f"Connected to websocket at {uri}")
+        # Wait for a file to be added via CRDT observer callback
+        logger.info("Waiting for files to be added...")
+        await file_added.wait()
+        
+        metrics["write_time"] = str(datetime.now())
+        logger.info("File received via CRDT sync.")
 
-            async def websocket_listener(ws):
-                try:
-                    while True:
-                        message = await ws.recv()
-                        logger.info(f"Received update: {message}")
-                        # file_storage.process_update()
-                except websockets.exceptions.ConnectionClosedError as e:
-                    logger.error(f"Websocket connection closed unexpectedly: {e}")
-                except Exception as e:
-                    logger.error(f"An error occurred: {e}")
+        received_files = file_storage.get_signatures()
+        test_file = received_files[0]
 
-            ws_task = asyncio.create_task(websocket_listener(websocket))
+        digest = bytes.fromhex(test_file["hash"])
+        signature = bytes.fromhex(test_file["signature"])
+        public_key_hex = user_storage.get_user_public_key(test_file["user_id"])
+        public_key = load_public_key(bytes.fromhex(public_key_hex))
 
-            signature_data = None
-            while not signature_data:
-                await asyncio.sleep(0.01)
-                file_storage.load_signatures_from_file()
-                signature_data = file_storage.get_signatures()
-            metrics["write_time"] = str(datetime.now())
+        is_valid = is_verified_signature(digest, signature, public_key)
 
-            test_file = signature_data[0]
+        if is_valid:
+            logger.success("Test file is VALID.")
+            metrics["validation_outcome"] = "valid"
+        else:
+            logger.error("Test file is NOT VALID.")
+            metrics["validation_outcome"] = "invalid"
 
-            digest = bytes.fromhex(test_file["hash"])
-            signature = bytes.fromhex(test_file["signature"])
-            public_key_hex = user_storage.get_user_public_key(test_file["user_id"])
-            public_key = load_public_key(bytes.fromhex(public_key_hex))
+        # Wait for the file to be removed
+        logger.info("Waiting for files to be removed...")
+        await file_removed.wait()
 
-            is_valid = is_verified_signature(digest, signature, public_key)
-
-            if is_valid:
-                logger.success("Test file is VALID.")
-                metrics["validation_outcome"] = "valid"
-            else:
-                logger.error("Test file is NOT VALID.")
-                metrics["validation_outcome"] = "invalid"
-
-            # Now wait for the file to be removed
-            while len(signature_data) > 0:
-                await asyncio.sleep(0.01)
-                file_storage.load_signatures_from_file()
-                signature_data = file_storage.get_signatures()
-
-            metrics["remove_time"] = str(datetime.now())
-            logger.success("File successfully removed.")
-
-            # Close the websocket gracefully
-            ws_task.cancel()
-            await websocket.close()
-
-        except websockets.exceptions.ConnectionClosedError as e:
-            logger.error(f"Websocket connection closed unexpectedly: {e}")
-        except ConnectionRefusedError as e:
-            logger.error(f"Failed to connect to websocket: {e}")
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-        finally:
-            # Ensure websocket is closed if it's still open
-            if websocket:
-                await websocket.close()
+        metrics["remove_time"] = str(datetime.now())
+        logger.success("File successfully removed.")
 
     await receive_update()
 
