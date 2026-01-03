@@ -5,9 +5,9 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from cryptography.hazmat.primitives.asymmetric.ed448 import (
-    Ed448PrivateKey,
-    Ed448PublicKey,
+from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+    Ed25519PrivateKey,
+    Ed25519PublicKey,
 )
 
 from crdtsign.sign import (
@@ -49,8 +49,8 @@ class TestKeypairGeneration:
         """Test that new keypairs are generated correctly."""
         private_key, public_key = new_keypair(persist=False)
 
-        assert isinstance(private_key, Ed448PrivateKey)
-        assert isinstance(public_key, Ed448PublicKey)
+        assert isinstance(private_key, Ed25519PrivateKey)
+        assert isinstance(public_key, Ed25519PublicKey)
         assert public_key == private_key.public_key()
 
     def test_new_keypair_persistence(self):

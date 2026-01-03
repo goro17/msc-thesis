@@ -5,9 +5,9 @@ import os
 from pathlib import Path
 
 from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives.asymmetric.ed448 import (
-    Ed448PrivateKey,
-    Ed448PublicKey,
+from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+    Ed25519PrivateKey,
+    Ed25519PublicKey,
 )
 
 
@@ -18,12 +18,12 @@ def get_file_hash(file_path: os.PathLike) -> str:
     return hashlib.sha256(file_content).digest().hex()
 
 
-def sign(file_path: Path, private_key: Ed448PrivateKey) -> bytes:
+def sign(file_path: Path, private_key: Ed25519PrivateKey) -> bytes:
     """Sign a file with a private key.
 
     Args:
         file_path: Path to the file to be signed
-        private_key: Ed448 private key used for signing
+        private_key: Ed25519 private key used for signing
 
     Returns:
         bytes: The cryptographic signature of the file
@@ -43,13 +43,13 @@ def sign(file_path: Path, private_key: Ed448PrivateKey) -> bytes:
     return signature
 
 
-def is_verified_signature(file_hash: bytes, signature: bytes, public_key: Ed448PublicKey) -> bool:
+def is_verified_signature(file_hash: bytes, signature: bytes, public_key: Ed25519PublicKey) -> bool:
     """Verify the signature of a file with the signer's public key and the file's SHA-256 hash.
 
     Args:
         file_hash: Hash of the file to verify
         signature: The cryptographic signature to verify
-        public_key: Ed448 public key of the signer
+        public_key: Ed25519 public key of the signer
 
     Returns:
         bool: True if the signature is valid, False otherwise
@@ -64,14 +64,14 @@ def is_verified_signature(file_hash: bytes, signature: bytes, public_key: Ed448P
         return False
 
 
-def new_keypair(persist: bool = False) -> (Ed448PrivateKey, Ed448PublicKey):
+def new_keypair(persist: bool = False) -> (Ed25519PrivateKey, Ed25519PublicKey):
     """Generate a new keypair.
 
     Args:
         persist: If True, saves the generated keypair to disk in the .storage directory
 
     Returns:
-        tuple[Ed448PrivateKey, Ed448PublicKey]: A tuple containing the generated private and public keys
+        tuple[Ed25519PrivateKey, Ed25519PublicKey]: A tuple containing the generated private and public keys
 
     Note:
         When persist=True, the private and public keys are saved as hex-encoded strings
@@ -81,7 +81,7 @@ def new_keypair(persist: bool = False) -> (Ed448PrivateKey, Ed448PublicKey):
     if not Path(".storage").exists():
         Path(".storage").mkdir()
 
-    private_key = Ed448PrivateKey.generate()
+    private_key = Ed25519PrivateKey.generate()
     public_key = private_key.public_key()
 
     if persist:
@@ -94,11 +94,11 @@ def new_keypair(persist: bool = False) -> (Ed448PrivateKey, Ed448PublicKey):
     return private_key, public_key
 
 
-def load_keypair() -> (Ed448PrivateKey, Ed448PublicKey):
+def load_keypair() -> (Ed25519PrivateKey, Ed25519PublicKey):
     """Load the keypair from storage.
 
     Returns:
-        tuple[Ed448PrivateKey, Ed448PublicKey]: A tuple containing the loaded private and public keys
+        tuple[Ed25519PrivateKey, Ed25519PublicKey]: A tuple containing the loaded private and public keys
 
     Raises:
         FileNotFoundError: If the key files do not exist in .storage directory
@@ -107,25 +107,25 @@ def load_keypair() -> (Ed448PrivateKey, Ed448PublicKey):
     # Load the keypair from the storage directory
     with open(".storage/id_key", "rb") as file:
         private_bytes = bytes.fromhex(file.read().decode("utf-8"))
-        private_key = Ed448PrivateKey.from_private_bytes(private_bytes)
+        private_key = Ed25519PrivateKey.from_private_bytes(private_bytes)
     with open(".storage/id_key.pub", "rb") as file:
         public_bytes = bytes.fromhex(file.read().decode("utf-8"))
-        public_key = Ed448PublicKey.from_public_bytes(public_bytes)
+        public_key = Ed25519PublicKey.from_public_bytes(public_bytes)
 
     return private_key, public_key
 
 
-def load_public_key(public_bytes: bytes) -> Ed448PublicKey:
+def load_public_key(public_bytes: bytes) -> Ed25519PublicKey:
     """Load a public key from its raw bytes representation.
 
     Args:
         public_bytes: Raw bytes of the public key
 
     Returns:
-        Ed448PublicKey: The public key instance
+        Ed25519PublicKey: The public key instance
 
     Raises:
-        ValueError: If the provided bytes are not a valid Ed448 public key
+        ValueError: If the provided bytes are not a valid Ed25519 public key
     """
-    public_key = Ed448PublicKey.from_public_bytes(public_bytes)
+    public_key = Ed25519PublicKey.from_public_bytes(public_bytes)
     return public_key

@@ -48,9 +48,9 @@ def cli():
 @click.option("-v", "--verify", is_flag=True, default=False, help="Verify a file.")
 @click.option("-t", "--table", is_flag=True, default=False, help="List the signed files present in storage.")
 def sign_command(file: Path, verify: bool, table: bool):
-    """Sign or verify a file using Ed448 cryptographic signatures.
+    """Sign or verify a file using Ed25519 cryptographic signatures.
 
-    This command allows users to either 1) sign a file using an Ed448
+    This command allows users to either 1) sign a file using an Ed25519
     private key (default behavior), or 2) verify a file's signature using the
     signer's public key (via the --verify flag)
 
