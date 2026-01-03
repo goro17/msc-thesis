@@ -1,9 +1,37 @@
-\chapter{Further Considerations on the Proof-of-Concept and Conclusions}
+\chapter{Evaluation of the Proof-of-Concept Application and Conclusions}
 
-\section{Summary of the Proof-of-Concept's Achieved Use Cas}
+\section{Summary of the Proof-of-Concept Application}
 
-\section{Preliminary Evaluation of the Proof-of-Concept}
+The aim of this thesis was to illustrate Conflict-free Replicated Data Types and their
+utility in modern distributed software. This implied developing a Proof-of-Concept
+application -- CRDTSign -- a replicated file storage solution that enables a group
+of users to collaborate on a shared file storage. Each user has the possibility of
+uploading a file -- and certifying ownership on it through the means of a cryptographic
+signature -- and receiving files from other peers. Thanks to CRDTs, the PoC has the
+capability to operate in a decentralized manner -- each operation can be individually
+applied from each node, and the system's shared state is kept (eventually) consistent,
+without the need of a central node that coordinates operations and the order in which
+they are applied. This is an improvement over similar applications that leverage
+synchronization technologies such as Operational Transformation (OT), which elects a
+central node to manage operations for the rest of the network, with the goal of
+resolving possible conflicts.
 
-\section{Considerations for Future Development}
+In the following sections, we will provide a preliminary evaluation on the PoC's behavior
+with respect to \textit{scalability}, and then discuss some areas of improvement over the
+currently developed solution.
 
-\section{Final Remarks}
+\section{Evaluation of the Proof-of-Concept Application}
+
+While the behavior of CRDTSign with respect to functional and tecnhnical requirements has
+been established, its viability in a production-like environment depends on its
+scalability profile. Consequently, this section aims to introduce a preliminary
+evaluation of the solution that was performed with an experimental setup, and the
+resulting metrics that were measured throughout extensive testing. Through this
+analysis, we will discuss how the system behaves as demand scales, and assess the
+throughput and latency requirements achieved by the proposed solution.
+
+\subsection{Overview of the experimental setup for scalability testing}
+
+In an attempt to simulate real-world use cases 
+
+\section{Considerations for Future Work}
