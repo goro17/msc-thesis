@@ -1,6 +1,6 @@
 [project]
 name = "crdtsign-core"
-version = "0.5.2"
+version = "0.5.3"
 description = ""
 authors = [
     {name = "gf",email = "email@example.com"}
@@ -35,7 +35,9 @@ test-scalereader = "crdtsign.scripts.scalability_test:run_scale_read"
 dev = [
     "ipykernel>=7.1.0",
     "isort>=7.0.0",
+    "matplotlib>=3.10.8",
     "pytest >=8.3.5, <8.4",
+    "seaborn>=0.13.2",
 ]
 lint = [
     "ruff >=0.11.9, <0.12"

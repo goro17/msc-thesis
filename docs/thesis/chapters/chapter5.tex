@@ -14,7 +14,9 @@ without the need of a central node that coordinates operations and the order in 
 they are applied. This is an improvement over similar applications that leverage
 synchronization technologies such as Operational Transformation (OT), which elects a
 central node to manage operations for the rest of the network, with the goal of
-resolving possible conflicts.
+resolving possible conflicts. Through this application, a group of users can share
+a set of files with high availability in mind, as the files are replicated across
+multiple nodes.
 
 In the following sections, we will provide a preliminary evaluation on the PoC's behavior
 with respect to \textit{scalability}, and then discuss some areas of improvement over the
@@ -32,6 +34,116 @@ throughput and latency requirements achieved by the proposed solution.
 
 \subsection{Overview of the experimental setup for scalability testing}
 
-In an attempt to simulate real-world use cases 
+Two types of operations were the focus of the performed experiments -- \textit{add} and
+\textit{remove} operations. The overall objective of the experiments was to simulate
+real-world use cases with the maximum possible fidelity; in order to do so, the following
+mock scenarios were defined.
+
+\paragraph{\textit{Add} operations}
+A new user registers to CRDTSign, has a newly created cryptographic keypair assigned to
+it, and \textit{adds} a new file to shared storage -- signing it with its own private
+key. After updating the local CRDT storage, an update message reflecting the change in
+state is generated and transmitted to all replicas connected to the network. Each peer
+receiving the update message individually applies the update to its own local CRDT
+storage, adding the target file and retrieving all the data required to perform a
+validity check over the new file's signature -- the file's hash digest, the file's
+signature, and the signing user's public key. Once the peer successfully assesses the
+signature's validity, it is considered "up-to-date" with respect to the CRDT's state.
+When all replicas finish assessing the signature's validity -- and all checks return a
+positive outcome -- the entire system has \textit{converged} to a consistent state.
+
+\paragraph{\textit{Remove} operations}
+A user requests \textit{removal} of a file already present in the shared storage. After
+the file is removed in the local CRDT storage, an update message reflecting the change in
+state is generated and transmitted to all replicas connected to the network. Each peer
+receiving the update message individually applies the update to its own local CRDT
+storage, removing the target file from storage. Each replica then checks whether the file
+still exists in storage. Once the peer successfully assesses that the target file is no
+longer present in its current storage, it is considered "up-to-date" with respect to the
+CRDT's state. When all replicas finish assessing the removed file's presence -- and all
+checks return a negative outcome -- the entire system has \textit{converged} to a
+consistent state.
+
+Once these scenarios were defined, they were tested within an architecture made up of two
+types of node:
+
+\begin{itemize}
+    \item a \textit{writer node}, which is the source node in charge of producing the
+    \textit{test file} that is shared over the network, and which produces the
+    corresponding CRDT update messages that are then received by another type of node;
+    \item a \textit{reader node}, which awaits the update messages produced and
+    transmitted by the writer node, applies the update to its local storage, and assesses
+    the correctness of the resulting change in state.
+\end{itemize}
+
+The architecture for each performed experiment consists of exactly one writer node, and a
+variable number of reader nodes -- this number represents the \textit{scaling} parameter
+of each experiment. Technically speaking, each node is deployed within its dedicated
+Docker container, which runs a dedicated sequential Python -- depending on the node type
+-- that simulates both scenarios on a pre-determined test file. Each script is also in
+charge of logging specific timestamps, which are then used to retrieve the necessary
+test metrics. Namely, we define a measure of an operation's \textit{latency} as the time
+interval that occurs between the generation of the operation's corresponding update
+message -- writer node -- and the successful assessment of correctness of the state that
+is produced by applying the same update on an individual remote site -- reader node.
+
+Once all the measurements for the latency of a given operation are gathered from all
+deployed nodes, we select the highest latency that was produced throughout the
+conducted experiment. We denote this latency as a measure of the system's
+\textit{convergence time} for the given operation -- i.e., the time it takes for all
+nodes to converge to an identical state, once the tested operation is transmitted over
+the network. Each experiment registered the convergence time for both \textit{add} and
+\textit{remove} operations applied to the same test file. The experiment was then
+repeated over multiple rounds, where each rounds consists of multiple iterations over
+the same experiment -- e.g., 10 iterations per round -- performed with a specific scaling
+parameter selected. For example, if the scaling parameter was set to 5, it means that
+the experiments were conducted over a network of 6 nodes -- one writer node and 5 reader
+nodes. Due to constraints that will be discussed in the following sections, the
+experiments were bounded to testing all scaling parameter values between $1$ and $16$.
+
+\subsection{Analysis of the achieved results}
+
+\begin{figure}[tb]
+    \centering
+    \begin{subfigure}[b]{0.8\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{plot-scaling-tests-add.pdf}
+        \caption{Experiment results for \textit{add} operations}
+        \label{fig:plot-scaling-tests-add}
+    \end{subfigure}
+    \par\bigskip
+    \begin{subfigure}[b]{0.8\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{plot-scaling-tests-remove.pdf}
+        \caption{Experiment results for \textit{remove} operations}
+        \label{fig:plot-scaling-tests-remove}
+    \end{subfigure}
+    \caption{Plots for the conducted experiments}
+    \label{fig:plot-scaling-tests}
+\end{figure}
+
+We now present the results of the experiments described previously, as shown in
+\autoref{fig:plot-scaling-tests-add} and \autoref{fig:plot-scaling-tests-remove}, which
+illustrate the (aggregated) convergence times registered on experiments concerning
+\textit{add} and \textit{remove} operations, respectively. Namely, each figure
+illustrates a line plot that is centered on the \textit{median} distribution ($P_{50}$)
+of the operation's convergence time at increasing values of scale, with a shaded area
+denoting the \textit{interquartile range} (IQR) for the registered convergence time, in a
+span between 25\% ($P_{25}$) and 75\% ($P_{75}$). While the median tells us how a certain
+operation typically takes for a given scale, the IQR serves as a proxy for the system's
+stability -- i.e., a stable system maintains a tight bound, regardless of scale.
+
+Given the samples provided, the results illustrated by both figures exhibit a scaling
+behavior that follows an approximately linear growth, which is the expected behavior from
+this type of systems. It is important to note that all experiments presented above were
+conducted by leveraging consumer-grade hardware, where all the nodes of the cluster run
+on separate (virtual) containers -- but still bounded to the same machine. Employing a
+distributed cluster of dedicated machines would help in further optimizing convergence
+times, and in opening the possibility of conducting experiments on a larger scale --
+e.g., on clusters made up of 100 or more replicas. Despite these factors, the system's
+response time consistently remains below the 1-second (1000ms) threshold. Given the
+functionalities of the system, the presented results denote a system that is aligned
+with the user's expectations \cite{Doherty2015Keeping} of interaction with the system
+itself and its percieved responsiveness.
 
 \section{Considerations for Future Work}
