@@ -34,7 +34,7 @@ faulty nodes will reconcile with the system's consistent state, once they come b
 online. This approach eliminates the threat of a single point of failure that would
 compromise system-wide reliability.
 
-To illustrate this principle, we present a proof-of-concept implementation in the form of
+To illustrate this principle, we present a Proof-of-Concept implementation in the form of
 a replicated file storage system that leverages CRDTs to achieve eventual consistency
 without the need of centralized conflict resolution mechanisms. This system enables
 multiple users to execute fundamental file operations -- including file sharing and
@@ -44,7 +44,7 @@ Furthermore, the solution provides a \textit{file signature} mechanism, through 
 unique user provides a secure method of certifying its ownership over the same file, and
 on-demand validity check over the signature can be requested by any other user.
 
-In the following sections, we will refer to the proof-of-concept by the name of
+In the following sections, we will refer to the Proof-of-Concept by the name of
 \textit{CRDTSign}. 
 
 \subsection{Proof-of-Concept Scope and Boundaries}
@@ -160,12 +160,12 @@ can distinguish between two kinds of node:
 
 \begin{itemize}
 	\item \textit{Regular node}: is in charge of accepting and handling the user
-		requests, employing both front-end and back-end logic. It is implemented through
+		requests, employing both frontend and backend logic. It is implemented through
 		an application written in the
 		\textit{Python}\footnote{https://www.python.org/} programming language,
 		which exposes a Web interface through which all of CRDTSign's core
 		functionalities are provided to the end-user. When triggered, each functionality
-		invokes a custom-made Python library which implements and executes the back-end
+		invokes a custom-made Python library which implements and executes the backend
 		logic locally, interacting with suitable CRDT data structures when required.
 		These structures are implemented through
 		\textit{pycrdt}\footnote{https://y-crdt.github.io/pycrdt/}, a library that
@@ -192,17 +192,17 @@ can distinguish between two kinds of node:
 
 This section describes the technical implementation of the software components that form
 CRDTSign. The overall solution is organized in a modular fashion, and can be clustered
-into three core elements, which are the \textit{back-end} engine, the \textit{front-end}
+into three core elements, which are the \textit{backend} engine, the \textit{frontend}
 interface, and the \textit{relay server} logic. While the first two are equally deployed
 at each individual node of the distributed network, the third is hosted by a dedicated
 node belonging to the same network. Furthermore, the specifications of the chosen
 digital signature scheme are illustrated, along with the design choices that were taken
 to integrate such scheme in the solution.
 
-\subsection{Back-end}
+\subsection{Backend}
 
-The back-end serves as the main computational engine for each node in the network. As
-discussed above, the back-end logic is encapsulated through a custom-made library that
+The backend serves as the main computational engine for each node in the network. As
+discussed above, the backend logic is encapsulated through a custom-made library that
 supports several core functionalities of the solution. We can distinguish among the
 following operations.
 
@@ -221,7 +221,7 @@ The \texttt{user.py} module curates the identity management and persistence on l
 storage. The operations provided by this module ensure that all the necessary
 information revolving the user connecting to the solution is correctly generated.
 This information is then referenced when the user uploads a file through the
-solution's front-end interface.
+solution's frontend interface.
 
 For instance, the following objects are associated to a user entity:
 \begin{itemize}
@@ -302,7 +302,7 @@ the uploaded file's unique ID, while its corresponding value is a Python
 For convenience, the uploaded file is shared within the CRDT by preliminarily embedding
 it in the metadata as a (serialized) \textit{file blob}. Details on the file blob
 serialization and deserialization operations are illustrated in the next sub-section.
-Upon retrieval of CRDT update containing the new file entry, if the node's back-end
+Upon retrieval of CRDT update containing the new file entry, if the node's backend
 identifies a file blob embedded in the metadata, it deserializes it and saves it to
 local storage, and deletes the file blob from the metadata dictionary.
 
@@ -313,7 +313,7 @@ indefinitely preserves the validity of the file signature itself.
 
 An additional method is provided within the \texttt{FileSignatureStorage} class, which
 regulates the custom \textit{data retention policy enforcement} routine, which triggers
-each time the class is instantiated -- generally, this only occurs when the back-end
+each time the class is instantiated -- generally, this only occurs when the backend
 module is initially booted. The routine retrieves a configuration parameter that
 indicates the data retention interval for newly uploaded files -- e.g., 90 days. For each
 file in the CRDT, the routine constructs a synthetic timestamp ($t_{retention}$) by using
@@ -376,7 +376,7 @@ metadata saved inside the CRDT. Conversely, the \textit{deserialization} operati
 the file's blob as input, and decompresses it via the same LZ4 algorithm, returning the
 original file's content as output.
 
-\subsection{Front-end}\label{sec:frontend}
+\subsection{Frontend}\label{sec:frontend}
 CRDTSign's \texttt{api.py} module serves as the user's entry point to the application. Its
 main objective is to initialize an asynchronous RESTful API through the
 \textit{Quart}\footnote{https://quart.palletsprojects.com/en/latest/} framework.
@@ -394,7 +394,7 @@ be read by the \textit{Jinja} templating engine for Python
 \begin{figure}[tb!]
     \centering
     \includegraphics[width=\linewidth]{crdtsign-web-main.png}
-    \caption{The main view for CRDTSign's front-end.}
+    \caption{The main view for CRDTSign's frontend.}
     \label{fig:crdtsign-web-main}
 \end{figure}
 
@@ -434,7 +434,7 @@ example of the modal being displayed can be found in \autoref{fig:crdtsign-web-d
 \end{figure}
 
 The \textit{Validate} button issues a request to check the validity of the selected
-file's signature. This request is dispatched to the back-end using the available
+file's signature. This request is dispatched to the backend using the available
 methods, and the outcome of the check is then displayed in a pop-up notification
 appearing in the top-right corner of the web browser -- as shown in
 \autoref{fig:crdtsign-web-validate}. If present, the user is also informed of the
@@ -637,8 +637,8 @@ networks:
 
 \section{Development of the Complementary Mobile Application}
 
-As an addendum to the provided solution, a prototype mobile front-end application was
-developed to wrap around the present back-end logic. The application was written using
+As an addendum to the provided solution, a prototype mobile frontend application was
+developed to wrap around the present backend logic. The application was written using
 the \textit{Flet} framework\footnote{https://flet.dev/}, which offers a simple
 environment for building mobile and web applications, using Python syntax to construct
 user interfaces. Software that is developed with Flet can be compiled using Flet's
@@ -650,7 +650,7 @@ Windows, Linux, or macOS, or mobile operating systems such as Android or iOS.
 
 Through Flet, an application was developed -- named \texttt{crdtsign-mobile}, for
 distinction with the main application -- to mimic the functionalities that are already
-present in the main front-end application described in \autoref{sec:frontend}. Namely,
+present in the main frontend application described in \autoref{sec:frontend}. Namely,
 the mobile application is divided into two principal views that the user can navigate
 between:
 

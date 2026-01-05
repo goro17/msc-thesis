@@ -2,6 +2,19 @@
 \addcontentsline{toc}{chapter}{Abstract} 
 \chapter*{Abstract}
 
-\textit{TBD.}
+The landscape of modern computing has increasingly shifted torwards distributed
+architectures to meet the demand of high availability and real-time collaboration.
+Traditional approaches to data synchronization often rely on centralized strategies, such
+as Operational Transformation (OT). This thesis provides a more sensible approach by
+exploring Conflict-free Replicated Data Types (CRDTs), which are data structures backed
+by sound mathematical frameworks, and guarantee Strong Eventual Consistency (SEC) in
+decentralized environments, without the need for a central authority.
+
+To demonstrate the efficacy of this approach, this work presents the design and
+implementation of a Proof-of-Concept replicated file storage system. The system
+simulates a peer-to-peer network, where file contents and metadata are synchronized
+across multiple replicas connected to the same network. A distinguishing feature of the
+PoC is the integration of a cryptographic digital scheme mechanism, which enables users
+to assert ownership of files and allows peers to perform validity checks on shared data.
 
 \clearpage
