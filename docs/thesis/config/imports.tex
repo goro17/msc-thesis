@@ -39,3 +39,61 @@
 \usepackage{algorithmicx,algpseudocode}
 
 \usepackage{subcaption}
+
+\usepackage{listings}
+
+% Define colors for Dockerfile syntax highlighting
+\definecolor{dockerkeyword}{RGB}{0,102,204}
+\definecolor{dockerstring}{RGB}{163,21,21}
+\definecolor{dockercomment}{RGB}{128,128,128}
+\definecolor{dockerbackground}{RGB}{245,245,245}
+
+% Define colors for YAML/docker-compose syntax highlighting
+\definecolor{yamlkey}{RGB}{0,102,204}
+\definecolor{yamlvalue}{RGB}{163,21,21}
+\definecolor{yamlcomment}{RGB}{128,128,128}
+
+% Define Dockerfile language
+\lstdefinelanguage{Dockerfile}{
+  keywords={FROM, RUN, CMD, LABEL, EXPOSE, ENV, ADD, COPY, ENTRYPOINT, VOLUME, USER, WORKDIR, ARG, ONBUILD, STOPSIGNAL, HEALTHCHECK, SHELL},
+  keywordstyle=\color{dockerkeyword}\bfseries,
+  identifierstyle=\color{black},
+  sensitive=false,
+  comment=[l]{\#},
+  commentstyle=\color{dockercomment}\ttfamily,
+  stringstyle=\color{dockerstring}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
+
+% Define docker-compose YAML language
+\lstdefinelanguage{docker-compose}{
+  keywords={version, services, networks, volumes, build, context, dockerfile, image, container_name, ports, environment, env_file, volumes, networks, depends_on, command, entrypoint, restart, deploy, replicas, labels, expose, links, external_links, extra_hosts, logging, driver, options, healthcheck, test, interval, timeout, retries, configs, secrets},
+  keywordstyle=\color{yamlkey}\bfseries,
+  sensitive=true,
+  comment=[l]{\#},
+  commentstyle=\color{yamlcomment}\ttfamily,
+  stringstyle=\color{yamlvalue}\ttfamily,
+  morestring=[b]',
+  morestring=[b]",
+  morecomment=[s][\color{yamlvalue}]{:}{\ },
+  literate=
+    {-}{{\textcolor{yamlkey}{-}}}1
+    {:}{{\textcolor{yamlkey}{:}}}1
+}
+
+% Set default style for Dockerfile listings
+\lstset{
+  language=Dockerfile,
+  backgroundcolor=\color{dockerbackground},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=8pt,
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  framexleftmargin=15pt,
+  xleftmargin=15pt,
+  tabsize=4,
+  showstringspaces=false
+}

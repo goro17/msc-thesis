@@ -14,9 +14,7 @@ without the need of a central node that coordinates operations and the order in 
 they are applied. This is an improvement over similar applications that leverage
 synchronization technologies such as Operational Transformation (OT), which elects a
 central node to manage operations for the rest of the network, with the goal of
-resolving possible conflicts. Through this application, a group of users can share
-a set of files with high availability in mind, as the files are replicated across
-multiple nodes.
+resolving possible conflicts.
 
 In the following sections, we will provide a preliminary evaluation on the PoC's behavior
 with respect to \textit{scalability}, and then discuss some areas of improvement over the
@@ -101,9 +99,76 @@ the experiments were conducted over a network of 6 nodes -- one writer node and 
 nodes. Due to constraints that will be discussed in the following sections, the
 experiments were bounded to testing all scaling parameter values between $1$ and $16$.
 
+The setup was then deployed through the Docker Compose command, which was used to
+instantiate one writer node and a desired number of reader nodes -- specified through the
+\texttt{\-\-scale} flag. The following YML configuration file was used for this purpose.
+
+\begin{lstlisting}[language=docker-compose, caption={docker-compose.yml}]
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8765:8765
+    container_name: crdtsign-server
+    networks:
+      - crdtsign-network
+    command: uv run crdtsign server --host 0.0.0.0 --port 8765
+    environment:
+      - PYTHONBUFFERED=1
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.settimeout(1); s.connect(('localhost', 8765)); s.close()"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+
+  scale-reader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # container_name: scale-reader
+    networks:
+      - crdtsign-network
+    depends_on:
+      server:
+        condition: service_healthy
+    command: uv run test-scalereader
+    environment:
+      - PYTHONBUFFERED=1
+      - IS_CONTAINER=true
+    volumes:
+      - /etc/localtime:/etc/localtime
+      - ./crdtsign/core/tests/artifacts:/app/tests/artifacts
+
+  scale-writer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scale-writer
+    networks:
+      - crdtsign-network
+    depends_on:
+      server:
+        condition: service_healthy
+    command: uv run test-scalewriter
+    environment:
+      - PYTHONBUFFERED=1
+      - IS_CONTAINER=true
+    volumes:
+      - /etc/localtime:/etc/localtime
+      - ./crdtsign/core/tests/artifacts:/app/tests/artifacts
+
+networks:
+  crdtsign-network:
+    driver: bridge
+\end{lstlisting}
+
 \subsection{Analysis of the achieved results}
 
-\begin{figure}[tb]
+\begin{figure}[tbph!]
     \centering
     \begin{subfigure}[b]{0.8\textwidth}
         \centering
@@ -147,3 +212,38 @@ with the user's expectations \cite{Doherty2015Keeping} of interaction with the s
 itself and its percieved responsiveness.
 
 \section{Considerations for Future Work}
+
+Over the course of this thesis, the main concepts surrounding CRDTs and their
+applicability in modern software development were explored. Furthermore, the advantages
+of adopting CRDTs in modern, distributed software were demonstrated through the design
+and implementation of a Proof-of-Concept application. Through this application, a group
+of users can share a set of files, which is replicated across multiple nodes for high
+availability -- in case of failure of one node, the same information can be retrieved
+from other nodes. The operations that the PoC supports are executed in a decenteralized
+manner, without the need of having a central authority dictate the necessary
+synchronization strategy and conflict resolution mechanism for the entire architecture.
+
+There exists a greater number of practical applications for CRDTs than the ones that were
+introduces throughout this thesis. Aside from multiple variations on collaborative
+editing -- where popular applications such as
+\textit{Zed}\footnote{https://zed.dev/blog/crdts} and
+\textit{Figma}\footnote{https://www.figma.com/blog/how-figmas-multiplayer-technology-works/}
+employ CRDTs or an approach inspired by them -- it is possible to find CRDTs applied to
+distributed databases, such as \textit{Riak} \cite{Klophaus2010Riak}, \textit{Redis}
+\cite{Redis_crdt}, and \textit{AntidoteDB} \cite{AntidoteDB_docs}, and in a wider range of
+decentralized applications, such as social networks \cite{Farcaster_specs}, and even
+Blockchain technologies \cite{Nasirifard2023Orderless}.
+
+As for the use case that was discussed in previous chapters, there is still room for
+improvement of the solution fleshed out by the development of CRDTSign. For instance, the
+currently developed solution is limited to the tooling that is already available for use
+within the Python environment -- i.e., the \textit{pycrdt} library for constructing
+CRDT structures, and the \textit{pycrdt-websocket} library for sharing updates over the
+WebSocket protocol. A more robust solution can be achieved by adopting specialized P2P
+protocols designed for file synchronization, such as the \textit{Dat} \cite{Ogden2017Dat}
+Protocol. Although a more dedicated protocol would require careful handling of shared
+files and their metadata, this type of improvement opens up the possibility of extending
+the functionalities that were defined, and to transform a solution such as CRDTSign into
+a truly-decenteralized, replicated file system, which is capable of providing more
+complex functionalities -- e.g., organizing files in hierarchical folders, renaming
+files, version control, and so on.
